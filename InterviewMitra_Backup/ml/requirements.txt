@@ -1,0 +1,10 @@
+flask
+flask-cors
+mediapipe
+openai-whisper
+python-multipart
+boto3
+requests
+numpy
+pandas
+scikit-learn
