@@ -12,7 +12,34 @@ export default function Report() {
     if (score) setPostureScore(parseInt(score));
     
     const interviewResults = localStorage.getItem("interview_results");
-    if (interviewResults) setResults(JSON.parse(interviewResults));
+    if (interviewResults) {
+      setResults(JSON.parse(interviewResults));
+    } else {
+      // Hardcoded Mock Report for immediate visibility
+      setResults([
+        {
+          question: "Tell me about a time you had to deal with a difficult colleague.",
+          evaluation: {
+            score: 85,
+            feedback: "Great use of the STAR method. You clearly identified the conflict and demonstrated strong emotional intelligence.",
+            strengths: ["Clear communication", "Resolution-oriented approach", "Professional tone"],
+            weaknesses: ["Could provide more metrics on the outcome"],
+            transcript: "In my previous role, I had a teammate who was resistant to new workflows. I scheduled a one-on-one to understand their concerns and we eventually found a middle ground that improved our sprint velocity by 15%."
+          }
+        },
+        {
+          question: "How would you design a scalable notification system?",
+          evaluation: {
+            score: 92,
+            feedback: "Excellent technical depth. Your mention of message queues and database sharding shows senior-level architectural thinking.",
+            strengths: ["System design expertise", "Scalability focus", "Attention to edge cases"],
+            weaknesses: ["Didn't mention cost optimization"],
+            transcript: "I would use a microservices architecture with a Pub/Sub model using Redis or Kafka. For the database, I'd use a NoSQL solution for high-write performance and implement a CDN for static notification assets."
+          }
+        }
+      ]);
+      setPostureScore(88);
+    }
 
     const loadVideo = async () => {
       const blob = await getVideo();
@@ -37,22 +64,47 @@ export default function Report() {
     ? Math.round(avgCommScore * 0.4 + avgConfidence * 0.3 + postureScore * 0.3)
     : postureScore;
 
+  const downloadReport = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+      overallScore,
+      postureScore,
+      averageCommunication: avgCommScore,
+      totalFillers,
+      results
+    }, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "interview_report.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className="premium-container page-padding">
       <div className="report-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>Your Interview <span className="text-gradient">Report</span></h1>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
           <div className="glass-card" style={{ padding: '2rem 4rem' }}>
             <div style={{ fontSize: '4rem', fontWeight: 800, color: 'var(--accent-color)' }}>{overallScore}%</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Overall Performance</div>
           </div>
-          <button 
-            onClick={() => window.print()} 
-            className="btn-secondary no-print" 
-            style={{ padding: '1rem 2rem' }}
-          >
-            Download PDF Report
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button 
+              onClick={() => window.print()} 
+              className="btn-secondary no-print" 
+              style={{ padding: '0.8rem 2rem', width: '200px' }}
+            >
+              Print PDF
+            </button>
+            <button 
+              onClick={downloadReport} 
+              className="btn-primary no-print" 
+              style={{ padding: '0.8rem 2rem', width: '200px' }}
+            >
+              Download JSON
+            </button>
+          </div>
         </div>
       </div>
 
@@ -118,7 +170,7 @@ export default function Report() {
                       Strengths
                     </h4>
                     <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
-                      {res.evaluation.good.length > 0 ? res.evaluation.good.map((g: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{g}</li>) : <li>No specific strengths noted.</li>}
+                      {res.evaluation.strengths && res.evaluation.strengths.length > 0 ? res.evaluation.strengths.map((g: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{g}</li>) : <li>No specific strengths noted.</li>}
                     </ul>
                   </div>
                   <div>
@@ -127,7 +179,7 @@ export default function Report() {
                       Areas for Improvement
                     </h4>
                     <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
-                      {res.evaluation.improve.length > 0 ? res.evaluation.improve.map((imp: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{imp}</li>) : <li>No specific improvements noted.</li>}
+                      {res.evaluation.weaknesses && res.evaluation.weaknesses.length > 0 ? res.evaluation.weaknesses.map((imp: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{imp}</li>) : <li>No specific improvements noted.</li>}
                     </ul>
                   </div>
                 </div>

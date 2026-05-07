@@ -20,11 +20,14 @@ def evaluate_answer(transcript, question_text):
     Candidate's Answer: {transcript}
     
     Provide a score out of 100, and short feedback focusing on strengths and weaknesses.
+    Also, estimate the candidate's confidence level (0-100) and count the number of filler words (um, uh, like, etc.).
     Return the response in JSON format with the following keys:
     - score: integer
     - feedback: string
     - strengths: list of strings
     - weaknesses: list of strings
+    - confidence: integer
+    - filler_count: integer
     """
 
     try:
@@ -39,7 +42,7 @@ def evaluate_answer(transcript, question_text):
                     "content": prompt,
                 }
             ],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             response_format={"type": "json_object"}
         )
         
