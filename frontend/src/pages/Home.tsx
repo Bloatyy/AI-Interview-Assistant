@@ -1,101 +1,143 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const companies = [
-  { id: "amazon", name: "Amazon", logo: "📦" },
-  { id: "google", name: "Google", logo: "🔍" },
-  { id: "meta", name: "Meta", logo: "♾️" },
-];
-
-const roles = [
-  { id: "sde", name: "Software Engineer", icon: "💻" },
-  { id: "data", name: "Data Analyst", icon: "📊" },
-  { id: "android", name: "Android Developer", icon: "🤖" },
-];
-
 export default function Home() {
-  const [selectedCompany, setSelectedCompany] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
   const navigate = useNavigate();
 
-  const isReady = selectedCompany && selectedRole;
-
-  const handleStart = () => {
-    if (isReady) {
-      navigate(`/interview?company=${selectedCompany}&role=${selectedRole}`);
-    }
-  };
-
   return (
-    <div className="premium-container page-padding">
-      <section className="hero-section">
-        <h1 className="animate-fade-in hero-title">
-          Master Your Next <span className="text-gradient">Interview</span>
-        </h1>
-        <p className="animate-fade-in hero-subtitle" style={{ animationDelay: '0.2s' }}>
-          Practice with AI-driven mock interviews tailored for top tech companies. 
-          Get real-time feedback and detailed performance reports.
-        </p>
-      </section>
-
-      <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-        <div className="glass-card config-card">
-          <h2 style={{ marginBottom: '2rem', textAlign: 'center' }}>Configure Your Session</h2>
-          
-          <div className="selection-section">
-            <p className="selection-label">Select Company</p>
-            <div className="selection-grid">
-              {companies.map((company) => (
-                <div
-                  key={company.id}
-                  onClick={() => setSelectedCompany(company.id)}
-                  className={`selection-card ${selectedCompany === company.id ? 'active' : ''}`}
-                >
-                  <div className="card-icon">{company.logo}</div>
-                  <div className="card-name">{company.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="selection-section">
-            <p className="selection-label">Select Role</p>
-            <div className="selection-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
-              {roles.map((role) => (
-                <div
-                  key={role.id}
-                  onClick={() => setSelectedRole(role.id)}
-                  className={`selection-card ${selectedRole === role.id ? 'active' : ''}`}
-                >
-                  <div className="card-icon">{role.icon}</div>
-                  <div className="card-name">{role.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center' }}>
-            <button 
-              onClick={handleStart}
-              className="btn-primary"
-              disabled={!isReady}
-              style={{ 
-                paddingLeft: '3rem', 
-                paddingRight: '3rem', 
-                fontSize: '1.1rem',
-                opacity: isReady ? 1 : 0.5,
-                cursor: isReady ? 'pointer' : 'not-allowed'
-              }}
-            >
-              Start Interview
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
+    <div className="bg-mesh">
+      {/* Hero */}
+      <section className="hero container-premium">
+        <div className="hero-content animate-reveal">
+          <div className="hero-badge">Next Gen Interview Prep</div>
+          <h1 className="hero-title">
+            The standard for <br />
+            <span className="text-gradient">high-performance</span> prep.
+          </h1>
+          <p className="hero-subtitle">
+            Leverage industry-leading AI to simulate, analyze, and master the technical interview experience.
+          </p>
+          <div className="hero-ctas">
+            <button onClick={() => navigate('/interview')} className="btn btn-primary">
+              Start practicing
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3.5L10.5 8L6 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
+            <button className="btn btn-secondary">Request demo</button>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Stats */}
+      <section className="container-premium section animate-reveal" style={{ animationDelay: '0.2s' }}>
+        <div className="stats-grid">
+          <div className="stat-item">
+            <div className="stat-value">94%</div>
+            <div className="stat-label">Placement Rate</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">500k+</div>
+            <div className="stat-label">Simulations</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">3.2x</div>
+            <div className="stat-label">Confidence Lift</div>
+          </div>
+          <div className="stat-item">
+            <div className="stat-value">0ms</div>
+            <div className="stat-label">Latency</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="about" className="container-premium section">
+        <div style={{ marginBottom: '6rem' }}>
+          <h2 className="section-title">Built for the <br />modern candidate.</h2>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '450px', marginTop: '1.5rem' }}>
+            A comprehensive suite of tools designed to give you a competitive edge in technical and behavioral assessments.
+          </p>
+        </div>
+        
+        <div className="feature-grid">
+          <div className="card-premium">
+            <div className="card-icon">🎙️</div>
+            <h3 style={{ marginBottom: '1rem' }}>Voice Intelligence</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Real-time analysis of filler words, tone, and technical precision.</p>
+          </div>
+          <div className="card-premium">
+            <div className="card-icon">👁️</div>
+            <h3 style={{ marginBottom: '1rem' }}>Visual Fidelity</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Non-verbal communication tracking including eye contact and posture.</p>
+          </div>
+          <div className="card-premium">
+            <div className="card-icon">⚡</div>
+            <h3 style={{ marginBottom: '1rem' }}>Instant Insights</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Detailed performance metrics generated immediately after each session.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Timeline */}
+      <section id="how-it-works" className="container-premium section">
+        <div style={{ textAlign: 'center', marginBottom: '8rem' }}>
+          <h2 className="section-title">Your path to mastery.</h2>
+        </div>
+        
+        <div className="timeline-container">
+          <div className="timeline-step animate-reveal">
+            <div className="step-marker">01</div>
+            <div>
+              <h3 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Configure Environment</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '500px' }}>
+                Select from specialized tracks including Systems Design, Data Science, and Frontend Engineering.
+              </p>
+            </div>
+          </div>
+          <div className="timeline-step animate-reveal" style={{ animationDelay: '0.1s' }}>
+            <div className="step-marker">02</div>
+            <div>
+              <h3 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Execute Session</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '500px' }}>
+                Participate in a high-fidelity simulation designed to push your technical boundaries.
+              </p>
+            </div>
+          </div>
+          <div className="timeline-step animate-reveal" style={{ animationDelay: '0.2s' }}>
+            <div className="step-marker">03</div>
+            <div>
+              <h3 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Receive Analytics</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '500px' }}>
+                Analyze deep metrics on clarity, relevance, and communication efficiency.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className="container-premium section">
+        <div className="contact-layout">
+          <div>
+            <h2 className="section-title">Start the <br />conversation.</h2>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '2rem', maxWidth: '400px' }}>
+              For custom enterprise solutions or support inquiries, reach out to our team.
+            </p>
+          </div>
+          
+          <form>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              <input type="text" className="input-premium" placeholder="Name" />
+              <input type="email" className="input-premium" placeholder="Email" />
+            </div>
+            <input type="text" className="input-premium" placeholder="Subject" style={{ marginTop: '2rem' }} />
+            <textarea className="input-premium" placeholder="Message" rows={4} style={{ marginTop: '2rem' }}></textarea>
+            <button className="btn btn-primary" style={{ marginTop: '4rem', width: '100%', justifyContent: 'center' }}>
+              Send message
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
-  );
+  )
 }
