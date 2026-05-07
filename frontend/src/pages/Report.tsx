@@ -1,97 +1,144 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { Link } from 'react-router-dom';
+import { getVideo } from "../utils/db";
 
 export default function Report() {
-  const report = {
-    overallScore: 82,
-    sections: [
-      { name: "Technical Accuracy", score: 85 },
-      { name: "Clarity & Communication", score: 78 },
-      { name: "Behavioral Alignment", score: 88 },
-      { name: "Confidence", score: 75 },
-    ],
-    strengths: [
-      "Excellent use of leadership principles in behavioral answers.",
-      "Strong technical foundation in system design concepts.",
-      "Maintained good eye contact throughout the session.",
-    ],
-    weaknesses: [
-      "Slightly over-explaining simple concepts (Technical Section).",
-      "Minor pauses when answering rapid-fire questions.",
-      "Background noise detected in question 3.",
-    ],
-    suggestions: [
-      "Try to use the STAR method more consistently for behavioral questions.",
-      "Keep technical answers concise; focus on the high-level architecture first.",
-    ]
-  };
+  const [postureScore, setPostureScore] = useState(0);
+  const [results, setResults] = useState<any[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const score = localStorage.getItem("final_posture_score");
+    if (score) setPostureScore(parseInt(score));
+    
+    const interviewResults = localStorage.getItem("interview_results");
+    if (interviewResults) setResults(JSON.parse(interviewResults));
+
+    const loadVideo = async () => {
+      const blob = await getVideo();
+      if (blob) {
+        setVideoUrl(URL.createObjectURL(blob));
+      }
+    };
+    loadVideo();
+  }, []);
+
+  const avgCommScore = results.length > 0 
+    ? Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / results.length)
+    : 0;
+
+  const avgConfidence = results.length > 0
+    ? Math.round(results.reduce((acc, r) => acc + (r.evaluation.confidence || 0), 0) / results.length)
+    : 0;
+
+  const totalFillers = results.reduce((acc, r) => acc + (r.evaluation.filler_count || 0), 0);
+
+  const overallScore = results.length > 0
+    ? Math.round(avgCommScore * 0.4 + avgConfidence * 0.3 + postureScore * 0.3)
+    : postureScore;
 
   return (
     <div className="premium-container page-padding">
-      <div className="report-header">
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>Interview <span className="text-gradient">Performance Report</span></h1>
-        <p style={{ color: 'var(--text-secondary)' }}>Generated on May 7, 2026 • Amazon | Software Engineer</p>
+      <div className="report-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <h1 style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>Your Interview <span className="text-gradient">Report</span></h1>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+          <div className="glass-card" style={{ padding: '2rem 4rem' }}>
+            <div style={{ fontSize: '4rem', fontWeight: 800, color: 'var(--accent-color)' }}>{overallScore}%</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Overall Performance</div>
+          </div>
+          <button 
+            onClick={() => window.print()} 
+            className="btn-secondary no-print" 
+            style={{ padding: '1rem 2rem' }}
+          >
+            Download PDF Report
+          </button>
+        </div>
       </div>
 
-      <div className="score-grid">
-        <div className="glass-card score-circle-container">
-          <div className="circle-wrapper">
-            <svg width="200" height="200" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-color)" strokeWidth="8" />
-              <circle cx="50" cy="50" r="45" fill="none" stroke="var(--primary-color)" strokeWidth="8" 
-                strokeDasharray="282.7" strokeDashoffset={282.7 - (282.7 * report.overallScore) / 100}
-                strokeLinecap="round" transform="rotate(-90 50 50)"
-              />
-            </svg>
-            <div className="circle-text">
-              <span style={{ fontSize: '3rem', fontWeight: 800 }}>{report.overallScore}</span>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Overall</div>
-            </div>
-          </div>
+      {videoUrl && (
+        <div className="glass-card no-print" style={{ padding: '2rem', marginBottom: '4rem' }}>
+          <h3 style={{ marginBottom: '1.5rem' }}>Session Replay</h3>
+          <video src={videoUrl} controls style={{ width: '100%', borderRadius: '1rem', background: '#000' }} />
         </div>
+      )}
 
-        <div className="glass-card">
-          <h3 style={{ marginBottom: '2rem' }}>Section Breakdown</h3>
-          <div className="section-list">
-            {report.sections.map((section) => (
-              <div key={section.name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                  <span>{section.name}</span>
-                  <span style={{ fontWeight: 600 }}>{section.score}%</span>
+      <div className="score-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <h3>Confidence</h3>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: 'var(--accent-color)' }}>{avgConfidence}%</div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Derived from speech fluency and directness.</p>
+        </div>
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <h3>Filler Words</h3>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: '#fbbf24' }}>{totalFillers}</div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total 'um', 'uh', 'like' detected.</p>
+        </div>
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <h3>Integrity</h3>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: '#10b981' }}>{postureScore}%</div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Camera presence and posture consistency.</p>
+        </div>
+        <div className="glass-card" style={{ padding: '2rem' }}>
+          <h3>Technical</h3>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: 'var(--primary-color)' }}>{avgCommScore}%</div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Accuracy and depth of technical answers.</p>
+        </div>
+      </div>
+
+      <div className="detailed-breakdown">
+        <h2 style={{ marginBottom: '2rem' }}>Detailed Breakdown</h2>
+        {results.length === 0 ? (
+          <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>No question results found. Complete an interview to see analysis.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {results.map((res, idx) => (
+              <div key={idx} className="glass-card" style={{ padding: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', fontWeight: 700, textTransform: 'uppercase' }}>Question {idx + 1}</span>
+                    <h3 style={{ marginTop: '0.5rem' }}>{res.question}</h3>
+                  </div>
+                  <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '2rem', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontWeight: 700 }}>
+                    {res.evaluation.score}%
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${section.score}%` }}></div>
+
+                <div className="transcript-box" style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '1.5rem', borderLeft: '4px solid var(--primary-color)' }}>
+                  <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Transcription (Whisper AI)</span>
+                  <p style={{ fontStyle: 'italic', color: 'var(--text-primary)' }}>"{res.evaluation.transcript || 'No response detected.'}"</p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div>
+                    <h4 style={{ color: '#10b981', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Strengths
+                    </h4>
+                    <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
+                      {res.evaluation.good.length > 0 ? res.evaluation.good.map((g: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{g}</li>) : <li>No specific strengths noted.</li>}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      Areas for Improvement
+                    </h4>
+                    <ul style={{ paddingLeft: '1.2rem', color: 'var(--text-secondary)' }}>
+                      {res.evaluation.improve.length > 0 ? res.evaluation.improve.map((imp: string, i: number) => <li key={i} style={{ marginBottom: '0.5rem' }}>{imp}</li>) : <li>No specific improvements noted.</li>}
+                    </ul>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div className="glass-card">
-          <h3 style={{ marginBottom: '1.5rem', color: '#10b981' }}>Strengths</h3>
-          <ul className="feedback-list">
-            {report.strengths.map((s, i) => <li key={i} style={{ color: 'var(--text-secondary)' }}>{s}</li>)}
-          </ul>
-        </div>
-
-        <div className="glass-card">
-          <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent-color)' }}>Weaknesses</h3>
-          <ul className="feedback-list">
-            {report.weaknesses.map((w, i) => <li key={i} style={{ color: 'var(--text-secondary)' }}>{w}</li>)}
-          </ul>
-        </div>
-      </div>
-
-      <div className="glass-card" style={{ marginTop: '2rem' }}>
-        <h3 style={{ marginBottom: '1.5rem' }}>Suggested Improvements</h3>
-        <ul className="feedback-list">
-          {report.suggestions.map((s, i) => <li key={i} style={{ color: 'var(--text-secondary)' }}>{s}</li>)}
-        </ul>
+        )}
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-        <Link to="/" className="btn-primary" style={{ padding: '1rem 3rem' }}>
+        <Link to="/" className="btn-primary no-print" style={{ padding: '1rem 4rem', fontSize: '1.1rem' }}>
           Practice Again
         </Link>
       </div>

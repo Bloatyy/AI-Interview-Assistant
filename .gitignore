@@ -15,3 +15,5 @@
 *.log
 .env*
 .vercel
+temp_*
+blob

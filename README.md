@@ -1,39 +1,45 @@
 # InterviewMitra
 
-A web-based AI mock interview platform that helps users practice realistic interviews with AI-driven evaluation and feedback.
+A premium AI-powered mock interview platform that provides realistic practice sessions with multi-modal analysis (Speech, Vision, and Logic).
 
 ## Project Structure
 
-- **`frontend/`**: Vite + React application for the frontend.
-  - Built with TypeScript and Vanilla CSS.
-  - Communicates with the Flask backend for interview logic and AI processing.
-- **`ml/`**: **Flask Backend** & Machine Learning logic.
-  - Handles API requests, interview flow, and AI evaluation.
-  - Contains Python logic for processing interview data and generating scores.
+- **`frontend/`**: Vite + React + TypeScript application.
+  - Premium UI with glassmorphism and smooth animations.
+  - Integrated with local IndexedDB for session persistence.
+- **`ml/`**: FastAPI Backend & Machine Learning logic.
+  - **Transcription**: Powered by OpenAI Whisper.
+  - **Evaluation**: Logic assessment via Groq (Llama 3).
+  - **Anti-Cheat**: Real-time face and posture tracking using OpenCV SSD.
 
 ## Getting Started
 
-### 1. Start the Flask Backend
+### 1. Prerequisites
+- Python 3.9+
+- Node.js 18+
+- Groq API Key (Place in `ml/.env`)
+
+### 2. Start the ML Backend
 1. Navigate to the `ml` directory:
    ```bash
    cd ml
    ```
-2. Install dependencies:
+2. Install Python dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-3. Run the server:
+3. Run the FastAPI server:
    ```bash
-   python app.py
+   python main.py
    ```
-   The backend will run on `http://localhost:5000`.
+   The backend will run on `http://localhost:8000`.
 
-### 2. Start the Frontend
-1. Navigate to the `full-stack` directory:
+### 3. Start the Frontend
+1. Navigate to the `frontend` directory:
    ```bash
-   cd full-stack
+   cd frontend
    ```
-2. Install dependencies:
+2. Install Node dependencies:
    ```bash
    npm install
    ```
@@ -41,10 +47,9 @@ A web-based AI mock interview platform that helps users practice realistic inter
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. Open the provided local URL (usually `http://localhost:5173`) in your browser.
 
 ## Tech Stack
-- **Frontend**: Next.js, React, Vanilla CSS
-- **Backend**: Python, Flask, Flask-CORS
-- **AI/ML**: MediaPipe, OpenAI Whisper
-- **Storage**: AWS S3 & DynamoDB (via Boto3)
+- **Frontend**: Vite, React, TypeScript, Vanilla CSS
+- **Backend**: FastAPI, Uvicorn
+- **AI/ML**: OpenAI Whisper, Groq (Llama 3), OpenCV, SSD Face Detection

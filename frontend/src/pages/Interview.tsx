@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { saveVideo } from "../utils/db";
 
 const questions_data = {
   amazon: {
@@ -33,17 +34,30 @@ export default function Interview() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRecording, setIsRecording] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const [postureStatus, setPostureStatus] = useState("Detecting...");
+  const [eyeGazeStatus, setEyeGazeStatus] = useState("Detecting...");
+  const [faceDetected, setFaceDetected] = useState("Yes");
+  const [postureScores, setPostureScores] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<string[]>([]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [fullSessionRecorder, setFullSessionRecorder] = useState<MediaRecorder | null>(null);
+  const sessionChunks = useRef<Blob[]>([]);
+  const recordingQuestionRef = useRef("");
+
   const questions = (questions_data as any)[company]?.[role] || questions_data.amazon.sde;
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
     async function setupCamera() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setStream(s);
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = s;
         }
       } catch (err) {
         console.error("Error accessing camera/mic:", err);
@@ -59,43 +73,192 @@ export default function Interview() {
     let timer: any;
     if (isInterviewStarted && timeLeft > 0) {
       timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && isInterviewStarted) {
       handleNext();
     }
     return () => clearInterval(timer);
   }, [isInterviewStarted, timeLeft]);
 
-  const startInterview = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/api/start-interview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company, role }),
-      });
-      const data = await response.json();
-      if (data.status === "success") {
-        setIsInterviewStarted(true);
+  // Anti-Cheat Loop
+  useEffect(() => {
+    if (!isInterviewStarted || !videoRef.current) return;
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const interval = setInterval(async () => {
+      if (videoRef.current && ctx) {
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        ctx.drawImage(videoRef.current, 0, 0);
+        
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const formData = new FormData();
+          formData.append("file", blob, "frame.jpg");
+
+          try {
+            const res = await fetch("http://localhost:8000/anti-cheat", {
+              method: "POST",
+              body: formData
+            });
+            const data = await res.json();
+            
+            if (data.faces_detected === 0) {
+              setFaceDetected("No face detected");
+            } else if (data.faces_detected > 1) {
+              setFaceDetected(`Multiple faces (${data.faces_detected})`);
+            } else {
+              setFaceDetected("Yes");
+            }
+            setPostureStatus(data.posture_status);
+            setEyeGazeStatus(data.eye_gaze);
+            setPostureScores(prev => [...prev, data.overall_score]);
+
+            if (data.alert) {
+              addNotification(data.alert);
+            }
+          } catch (err) {
+            console.error("Anti-cheat error:", err);
+          }
+        }, "image/jpeg");
       }
-    } catch (error) {
-      console.error("Failed to start interview:", error);
-      setIsInterviewStarted(true);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isInterviewStarted]);
+
+  const addNotification = (msg: string) => {
+    setNotifications(prev => [...prev, msg]);
+    setTimeout(() => {
+      setNotifications(prev => prev.slice(1));
+    }, 5000);
+  };
+
+  const startInterview = () => {
+    localStorage.removeItem("interview_results");
+    localStorage.removeItem("final_posture_score");
+    setPostureScores([]);
+    
+    // Start Full Session Recording
+    if (stream) {
+      const fullRecorder = new MediaRecorder(stream);
+      sessionChunks.current = [];
+      fullRecorder.ondataavailable = (e) => sessionChunks.current.push(e.data);
+      fullRecorder.start();
+      setFullSessionRecorder(fullRecorder);
+    }
+
+    setIsInterviewStarted(true);
+    startRecording();
+  };
+
+  const startRecording = () => {
+    if (stream) {
+      recordingQuestionRef.current = questions[currentStep].text;
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await submitAnswer(audioBlob, recordingQuestionRef.current);
+        
+        if (recordingQuestionRef.current === questions[questions.length - 1].text) {
+          navigateToReport();
+        }
+      };
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
     }
   };
 
+  const submitAnswer = async (audioBlob: Blob, questionText: string) => {
+    const formData = new FormData();
+    formData.append("audio", audioBlob);
+    
+    try {
+      // 1. Transcribe
+      const transRes = await fetch("http://localhost:8000/transcribe", {
+        method: "POST",
+        body: formData
+      });
+      const { transcript } = await transRes.json();
+
+      // 2. Evaluate
+      const evalRes = await fetch("http://localhost:8000/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript, question_text: questionText })
+      });
+      const evaluation = await evalRes.json();
+      
+      const existing = JSON.parse(localStorage.getItem("interview_results") || "[]");
+      existing.push({
+        question: questionText,
+        evaluation
+      });
+      localStorage.setItem("interview_results", JSON.stringify(existing));
+    } catch (err) {
+      console.error("Submission error:", err);
+    }
+  };
+
+  const navigateToReport = async () => {
+    if (fullSessionRecorder && fullSessionRecorder.state !== "inactive") {
+      const stopPromise = new Promise((resolve) => {
+        fullSessionRecorder.onstop = async () => {
+          const fullBlob = new Blob(sessionChunks.current, { type: 'video/webm' });
+          await saveVideo(fullBlob);
+          resolve(true);
+        };
+      });
+      fullSessionRecorder.stop();
+      await stopPromise;
+    }
+
+    const averageScore = postureScores.length > 0 
+      ? Math.round(postureScores.reduce((a, b) => a + b, 0) / postureScores.length)
+      : 100;
+    
+    localStorage.setItem("final_posture_score", averageScore.toString());
+    navigate("/report");
+  };
+
   const handleNext = () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+
     if (currentStep < questions.length - 1) {
       setCurrentStep(prev => prev + 1);
       setTimeLeft(60);
+      setTimeout(() => startRecording(), 500);
     } else {
-      navigate("/report");
+      setIsSubmitting(true);
     }
   };
 
   return (
     <div className="premium-container page-padding">
+      <div className="notification-area">
+        {notifications.map((n, i) => (
+          <div key={i} className="warning-toast animate-slide-in">
+            ⚠️ {n}
+          </div>
+        ))}
+      </div>
+
       <div className="interview-grid">
         <div className="glass-card interview-main">
-          {!isInterviewStarted ? (
+          {isSubmitting ? (
+            <div style={{ textAlign: 'center', margin: 'auto' }}>
+              <div className="loader" style={{ marginBottom: '2rem' }}></div>
+              <h2>Generating your AI Report...</h2>
+              <p style={{ color: 'var(--text-secondary)' }}>Analyzing your technical depth and speech patterns.</p>
+            </div>
+          ) : !isInterviewStarted ? (
             <div style={{ textAlign: 'center', margin: 'auto' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>Ready to start?</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
@@ -121,18 +284,12 @@ export default function Interview() {
               <h2 className="question-text">{questions[currentStep].text}</h2>
 
               <div className="controls-row">
-                <button 
-                  onClick={() => setIsRecording(!isRecording)} 
-                  className={isRecording ? "btn-secondary" : "btn-primary"}
-                  style={{ 
-                    background: isRecording ? 'var(--accent-color)' : '',
-                    borderColor: isRecording ? 'var(--accent-color)' : '',
-                  }}
-                >
-                  {isRecording ? "Stop Recording" : "Start Answer"}
-                </button>
-                <button onClick={handleNext} className="btn-secondary">
-                  Skip / Next
+                <div className="recording-status">
+                  {isRecording && <div className="recording-dot"></div>}
+                  <span>{isRecording ? "AI Listening..." : "Paused"}</span>
+                </div>
+                <button onClick={handleNext} className="btn-primary" style={{ padding: '0.8rem 2.5rem' }}>
+                  {currentStep === questions.length - 1 ? "Finish Interview" : "Next Question"}
                 </button>
               </div>
             </>
@@ -149,28 +306,21 @@ export default function Interview() {
           </div>
 
           <div className="glass-card">
-            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>AI Observations</h4>
+            <h4 style={{ marginBottom: '1.5rem', fontSize: '0.8rem', color: 'var(--primary-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>AI Intelligence Hub</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="observation-item">
-                <span>Face Detected</span>
-                <span style={{ color: '#10b981' }}>Yes</span>
+                <span style={{ color: 'var(--primary-muted)' }}>Face Detection</span>
+                <span style={{ color: faceDetected === 'Yes' ? '#10b981' : '#ef4444', fontWeight: 700 }}>{faceDetected}</span>
               </div>
               <div className="observation-item">
-                <span>Eye Gaze</span>
-                <span>Centered</span>
+                <span style={{ color: 'var(--primary-muted)' }}>Eye Tracking</span>
+                <span style={{ color: eyeGazeStatus === 'Centered' ? '#10b981' : '#ef4444', fontWeight: 700 }}>{eyeGazeStatus}</span>
               </div>
               <div className="observation-item">
-                <span>Posture</span>
-                <span>Good</span>
+                <span style={{ color: 'var(--primary-muted)' }}>Body Posture</span>
+                <span style={{ color: postureStatus === 'Good' ? '#10b981' : '#ef4444', fontWeight: 700 }}>{postureStatus}</span>
               </div>
             </div>
-          </div>
-
-          <div className="glass-card warning-box">
-            <h4 style={{ marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--accent-color)' }}>Anti-Cheat Warning</h4>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-              Avoid looking away from the screen or having multiple people in the frame.
-            </p>
           </div>
         </div>
       </div>

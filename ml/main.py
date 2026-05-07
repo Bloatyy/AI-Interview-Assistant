@@ -1,17 +1,23 @@
-from fastapi import FastAPI, UploadFile, File
-from dotenv import load_dotenv
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
 import os
-
-load_dotenv() # Load Groq API Key from .env
-from .transcription import transcribe_audio
-from .evaluation import evaluate_answer
-from .anti_cheat import detect_cheating
 import shutil
-import os
 import numpy as np
 import cv2
+from transcription import transcribe_audio
+from evaluation import evaluate_answer
+from anti_cheat import detect_cheating
 
 app = FastAPI(title="InterviewMitra ML Backend")
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/transcribe")
 async def transcribe(audio: UploadFile = File(...)):
@@ -19,9 +25,12 @@ async def transcribe(audio: UploadFile = File(...)):
     with open(temp_file, "wb") as buffer:
         shutil.copyfileobj(audio.file, buffer)
     
-    transcript = transcribe_audio(temp_file)
-    os.remove(temp_file)
-    return {"transcript": transcript}
+    try:
+        transcript = transcribe_audio(temp_file)
+        return {"transcript": transcript}
+    finally:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
 
 @app.post("/evaluate")
 async def evaluate(data: dict):
@@ -38,10 +47,14 @@ async def anti_cheat(file: UploadFile = File(...)):
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     
     if frame is None:
-        return {"error": "Invalid image"}
+        return {"error": "Invalid image", "is_cheating": False}
         
     analysis = detect_cheating(frame)
     return analysis
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
