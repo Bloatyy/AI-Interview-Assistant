@@ -1,0 +1,10 @@
+mediapipe
+openai-whisper
+fastapi
+uvicorn
+python-multipart
+boto3
+requests
+numpy
+pandas
+scikit-learn

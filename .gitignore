@@ -1,0 +1,17 @@
+# dependencies
+**/node_modules
+**/.next
+**/out
+**/build
+
+# python
+**/__pycache__
+**/*.pyc
+**/.venv
+**/env
+
+# misc
+.DS_Store
+*.log
+.env*
+.vercel
