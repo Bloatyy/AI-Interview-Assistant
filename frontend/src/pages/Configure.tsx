@@ -4,16 +4,13 @@ import { useNavigate } from 'react-router-dom'
 const companies = [
   { id: "amazon", name: "Amazon", logo: "AMZN" },
   { id: "google", name: "Google", logo: "GOOG" },
-  { id: "apple", name: "Apple", logo: "AAPL" },
   { id: "meta", name: "Meta", logo: "META" },
-  { id: "netflix", name: "Netflix", logo: "NFLX" },
 ];
 
 const roles = [
   { id: "sde", name: "Software Engineer" },
   { id: "frontend", name: "Frontend Engineer" },
   { id: "data", name: "Data Analyst" },
-  { id: "android", name: "Android Developer" },
 ];
 
 export default function Configure() {
