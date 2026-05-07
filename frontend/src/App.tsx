@@ -25,9 +25,9 @@ function App() {
       <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
         {/* Left Side: Nav Links */}
         <nav className="nav-group left">
-          <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>Product</Link>
-          <Link to="/companies" className="nav-link">Companies</Link>
-          <Link to="/resources" className="nav-link">Resources</Link>
+          <a href="/#standards" className="nav-link">Standards</a>
+          <a href="/#ecosystem" className="nav-link">Ecosystem</a>
+          <a href="/#mechanism" className="nav-link">Mechanism</a>
         </nav>
 
         {/* Middle: Logo */}
@@ -95,7 +95,7 @@ function App() {
             </div>
           </div>
           
-          <div style={{ paddingTop: '4rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', color: 'var(--primary-muted)', fontSize: '0.85rem' }}>
+          <div style={{ paddingTop: '2rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', color: 'var(--primary-muted)', fontSize: '0.85rem' }}>
             <p>© 2026 InterviewMitra. Designed for professionals.</p>
             <div style={{ display: 'flex', gap: '2rem' }}>
               <span>Cookie Settings</span>

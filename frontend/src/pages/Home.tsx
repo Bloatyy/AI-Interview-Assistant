@@ -94,7 +94,7 @@ export default function Home() {
       </section>
 
       {/* Section 2: Bento Grid */}
-      <section className="section">
+      <section id="standards" className="section">
         <div className="max-width">
           <h2 style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>The <span className="text-accent">Standard.</span></h2>
           <p style={{ color: 'var(--primary-muted)', marginBottom: '3rem', fontSize: '0.95rem' }}>Multi-layered analysis designed to bridge the gap between preparation and performance.</p>
@@ -129,9 +129,17 @@ export default function Home() {
       </section>
 
       {/* Section 3: Ecosystem Preview (Compact) */}
-      <section id="ecosystem" className="section" style={{ padding: '4rem 0' }}>
+      <section id="ecosystem" className="section" style={{ 
+        padding: '6rem 0', 
+        backgroundImage: 'linear-gradient(rgba(5, 5, 5, 0.8), rgba(5, 5, 5, 0.8)), url("/src/assets/ecosystem_bg.png")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)'
+      }}>
         <div className="max-width">
-          <div style={{ background: 'var(--glass)', border: '1px solid var(--border)', padding: '3rem', borderRadius: '2.5rem', display: 'flex', gap: '4rem', alignItems: 'center' }}>
+          <div style={{ background: 'rgba(15, 15, 15, 0.4)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.05)', padding: '4rem', borderRadius: '3rem', display: 'flex', gap: '5rem', alignItems: 'center' }}>
             <div style={{ flex: '0 0 320px' }}>
               <h2 style={{ fontSize: '2.2rem', marginBottom: '1rem', lineHeight: 1.1 }}>Global <br/><span className="text-accent">Tracks.</span></h2>
               <p style={{ color: 'var(--primary-muted)', fontSize: '0.95rem', lineHeight: 1.5 }}>
@@ -162,7 +170,7 @@ export default function Home() {
       </section>
 
       {/* Section 4: Mechanism */}
-      <section className="section" style={{ background: 'rgba(255,255,255,0.005)' }}>
+      <section id="mechanism" className="section" style={{ background: 'rgba(255,255,255,0.005)' }}>
         <div className="max-width">
           <div className="mechanism-grid">
             <div className="reveal">

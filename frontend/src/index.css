@@ -19,6 +19,10 @@
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--bg-color);
   color: #e2e8f0;
@@ -270,7 +274,7 @@ h1, h2, h3, h4 {
 }
 
 .footer {
-  padding: 10rem 0 6rem;
+  padding: 4rem 0 2rem;
   background: #080808;
   border-top: 1px solid var(--border);
 }
@@ -279,7 +283,7 @@ h1, h2, h3, h4 {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 4rem;
-  margin-bottom: 6rem;
+  margin-bottom: 3rem;
 }
 
 .footer-logo {
@@ -291,7 +295,7 @@ h1, h2, h3, h4 {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   color: white;
 }
 
