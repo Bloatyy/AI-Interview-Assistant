@@ -1,10 +1,10 @@
-# AI Interview Assistant
+# InterviewMitra
 
 A web-based AI mock interview platform that helps users practice realistic interviews with AI-driven evaluation and feedback.
 
 ## Project Structure
 
-- **`full-stack/`**: Next.js (React) application for the frontend.
+- **`frontend/`**: Vite + React application for the frontend.
   - Built with TypeScript and Vanilla CSS.
   - Communicates with the Flask backend for interview logic and AI processing.
 - **`ml/`**: **Flask Backend** & Machine Learning logic.
