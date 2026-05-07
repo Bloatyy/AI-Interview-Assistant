@@ -1,7 +1,5 @@
-"use client";
-
-import { useState } from "react";
-import Link from "next/link";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const companies = [
   { id: "amazon", name: "Amazon", logo: "📦" },
@@ -18,8 +16,15 @@ const roles = [
 export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const navigate = useNavigate();
 
   const isReady = selectedCompany && selectedRole;
+
+  const handleStart = () => {
+    if (isReady) {
+      navigate(`/interview?company=${selectedCompany}&role=${selectedRole}`);
+    }
+  };
 
   return (
     <div className="premium-container page-padding">
@@ -70,15 +75,16 @@ export default function Home() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <Link 
-              href={isReady ? `/interview?company=${selectedCompany}&role=${selectedRole}` : "#"} 
+            <button 
+              onClick={handleStart}
               className="btn-primary"
+              disabled={!isReady}
               style={{ 
                 paddingLeft: '3rem', 
                 paddingRight: '3rem', 
                 fontSize: '1.1rem',
                 opacity: isReady ? 1 : 0.5,
-                pointerEvents: isReady ? 'auto' : 'none'
+                cursor: isReady ? 'pointer' : 'not-allowed'
               }}
             >
               Start Interview
@@ -86,7 +92,7 @@ export default function Home() {
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
               </svg>
-            </Link>
+            </button>
           </div>
         </div>
       </div>

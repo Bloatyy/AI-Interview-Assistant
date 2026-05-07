@@ -1,8 +1,6 @@
-"use client";
+import { Link } from 'react-router-dom'
 
-import Link from "next/link";
-
-export default function ReportPage() {
+export default function Report() {
   const report = {
     overallScore: 82,
     sections: [
@@ -35,7 +33,6 @@ export default function ReportPage() {
       </div>
 
       <div className="score-grid">
-        {/* Score Overview */}
         <div className="glass-card score-circle-container">
           <div className="circle-wrapper">
             <svg width="200" height="200" viewBox="0 0 100 100">
@@ -52,7 +49,6 @@ export default function ReportPage() {
           </div>
         </div>
 
-        {/* Breakdown */}
         <div className="glass-card">
           <h3 style={{ marginBottom: '2rem' }}>Section Breakdown</h3>
           <div className="section-list">
@@ -72,7 +68,6 @@ export default function ReportPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        {/* Strengths & Weaknesses */}
         <div className="glass-card">
           <h3 style={{ marginBottom: '1.5rem', color: '#10b981' }}>Strengths</h3>
           <ul className="feedback-list">
@@ -96,7 +91,7 @@ export default function ReportPage() {
       </div>
 
       <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-        <Link href="/" className="btn-primary" style={{ padding: '1rem 3rem' }}>
+        <Link to="/" className="btn-primary" style={{ padding: '1rem 3rem' }}>
           Practice Again
         </Link>
       </div>

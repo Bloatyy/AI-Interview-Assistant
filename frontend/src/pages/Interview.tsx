@@ -1,7 +1,5 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const questions_data = {
   amazon: {
@@ -25,9 +23,9 @@ const questions_data = {
   }
 };
 
-export default function InterviewPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+export default function Interview() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const company = searchParams.get("company") || "amazon";
   const role = searchParams.get("role") || "sde";
 
@@ -35,18 +33,17 @@ export default function InterviewPage() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isRecording, setIsRecording] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const questions = (questions_data as any)[company]?.[role] || questions_data.amazon.sde;
 
   useEffect(() => {
+    let stream: MediaStream | null = null;
     async function setupCamera() {
       try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        setStream(mediaStream);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+          videoRef.current.srcObject = stream;
         }
       } catch (err) {
         console.error("Error accessing camera/mic:", err);
@@ -59,7 +56,7 @@ export default function InterviewPage() {
   }, []);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: any;
     if (isInterviewStarted && timeLeft > 0) {
       timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
     } else if (timeLeft === 0) {
@@ -68,8 +65,21 @@ export default function InterviewPage() {
     return () => clearInterval(timer);
   }, [isInterviewStarted, timeLeft]);
 
-  const startInterview = () => {
-    setIsInterviewStarted(true);
+  const startInterview = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/start-interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company, role }),
+      });
+      const data = await response.json();
+      if (data.status === "success") {
+        setIsInterviewStarted(true);
+      }
+    } catch (error) {
+      console.error("Failed to start interview:", error);
+      setIsInterviewStarted(true);
+    }
   };
 
   const handleNext = () => {
@@ -77,14 +87,13 @@ export default function InterviewPage() {
       setCurrentStep(prev => prev + 1);
       setTimeLeft(60);
     } else {
-      router.push("/report");
+      navigate("/report");
     }
   };
 
   return (
     <div className="premium-container page-padding">
       <div className="interview-grid">
-        {/* Main Content */}
         <div className="glass-card interview-main">
           {!isInterviewStarted ? (
             <div style={{ textAlign: 'center', margin: 'auto' }}>
@@ -130,7 +139,6 @@ export default function InterviewPage() {
           )}
         </div>
 
-        {/* Sidebar (Camera & Status) */}
         <div className="sidebar-col">
           <div className="glass-card video-container">
             <video ref={videoRef} autoPlay muted playsInline className="live-video" />

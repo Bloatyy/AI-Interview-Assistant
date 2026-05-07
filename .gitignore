@@ -1,7 +1,7 @@
 # dependencies
 **/node_modules
 **/.next
-**/out
+**/dist
 **/build
 
 # python
