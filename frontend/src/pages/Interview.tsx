@@ -104,13 +104,27 @@ export default function Interview() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDataSaved, setIsDataSaved] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [thoughtProcess, setThoughtProcess] = useState("");
   const [allThoughtProcesses, setAllThoughtProcesses] = useState<string[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
-  const allResultsRef = useRef<any[]>([]); // Sync ref to avoid React state race conditions
+  const allResultsRef = useRef<any[]>([]); 
   
   const sessionStartTimeRef = useRef<number | null>(null);
   const questionStartTimeRef = useRef<number | null>(null);
+
+  const [postureStatus, setPostureStatus] = useState("Detecting...");
+  const [eyeGazeStatus, setEyeGazeStatus] = useState("Detecting...");
+  const [faceDetected, setFaceDetected] = useState("Yes");
+  const [postureScores, setPostureScores] = useState<number[]>([]);
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [fullSessionRecorder, setFullSessionRecorder] = useState<MediaRecorder | null>(null);
+  const sessionChunks = useRef<Blob[]>([]);
+  const recordingQuestionRef = useRef("");
+  const notificationTimeouts = useRef<Record<string, any>>({});
 
   const handleViewReport = () => {
     setIsExiting(true);
@@ -118,21 +132,6 @@ export default function Interview() {
       navigate("/report");
     }, 800);
   };
-  
-  const [postureStatus, setPostureStatus] = useState("Detecting...");
-  const [eyeGazeStatus, setEyeGazeStatus] = useState("Detecting...");
-  const [faceDetected, setFaceDetected] = useState("Yes");
-  const [postureScores, setPostureScores] = useState<number[]>([]);
-  const [notifications, setNotifications] = useState<string[]>([]);
-  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
-  const videoRef = (el: HTMLVideoElement | null) => {
-    if (el && el !== videoElement) setVideoElement(el);
-  };
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [fullSessionRecorder, setFullSessionRecorder] = useState<MediaRecorder | null>(null);
-  const sessionChunks = useRef<Blob[]>([]);
-  const recordingQuestionRef = useRef("");
 
   const [questions, setQuestions] = useState<any[]>([]);
 
@@ -161,8 +160,8 @@ export default function Interview() {
       try {
         activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setStream(activeStream);
-        if (videoElement) {
-          videoElement.srcObject = activeStream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = activeStream;
         }
       } catch (err) {
         console.error("Error accessing camera/mic:", err);
@@ -195,14 +194,16 @@ export default function Interview() {
 
   // Ensure camera feed persists during layout transitions
   useEffect(() => {
-    if (videoElement && stream) {
-      videoElement.srcObject = stream;
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
     }
-  }, [videoElement, stream, isInterviewStarted]);
+  }, [stream, isInterviewStarted]);
 
   // Anti-Cheat & Diagnostic Loop
   useEffect(() => {
-    if (!videoElement || isSubmitting) return;
+    if (!videoRef.current || isSubmitting) return;
+
+    const videoElement = videoRef.current;
 
     console.log("Diagnostic loop starting...");
     const canvas = document.createElement("canvas");
@@ -244,7 +245,7 @@ export default function Interview() {
     }, 2000); // Increased frequency for better responsiveness
 
     return () => clearInterval(interval);
-  }, [videoElement, isSubmitting, isInterviewStarted]);
+  }, [isSubmitting, isInterviewStarted]);
 
   useEffect(() => {
     if (preSessionCountdown !== null) {
@@ -264,8 +265,6 @@ export default function Interview() {
       }
     }
   }, [preSessionCountdown]);
-
-  const notificationTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
 
   const addNotification = (msg: string) => {
     setNotifications(prev => {

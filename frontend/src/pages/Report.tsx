@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { Link } from 'react-router-dom';
-import { getVideo, getQuestionVideo } from "../utils/db";
+import { getVideo } from "../utils/db";
 
 export default function Report() {
   const [report, setReport] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -69,7 +68,7 @@ export default function Report() {
       try {
         const blob = await getVideo();
         if (blob) {
-          setVideoUrl(URL.createObjectURL(blob));
+          setSessionVideoUrl(URL.createObjectURL(blob));
         }
       } catch (err) {
         console.error("Video load error:", err);
