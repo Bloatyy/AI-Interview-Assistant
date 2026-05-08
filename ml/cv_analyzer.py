@@ -22,12 +22,25 @@ def extract_text_from_file(file_path):
     else:
         return None
 
+def is_valid_resume(text):
+    if not text or len(text.strip()) < 200:
+        return False
+    
+    resume_keywords = ['experience', 'education', 'skills', 'projects', 'summary', 'achievements', 'certifications', 'internship', 'university', 'college']
+    matches = [word for word in resume_keywords if word in text.lower()]
+    
+    # Require at least 3 distinct resume sections/keywords to be considered a valid resume
+    return len(matches) >= 3
+
 def analyze_cv(file_path):
     print(f"DEBUG: Analyzing CV: {file_path}")
     text = extract_text_from_file(file_path)
+    
     if not text:
-        print("DEBUG: Text extraction failed.")
-        return {"error": "Failed to extract text from CV"}
+        return {"error": "Invalid file format. Please upload a PDF or DOCX resume."}
+        
+    if not is_valid_resume(text):
+        return {"error": "The uploaded file does not appear to be a valid resume. Please ensure it contains sections like Experience, Education, and Skills."}
 
     print(f"DEBUG: Text extracted ({len(text)} chars). Sending to Groq...")
     prompt = f"""

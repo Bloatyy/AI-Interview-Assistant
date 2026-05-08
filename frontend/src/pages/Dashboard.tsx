@@ -108,8 +108,8 @@ export default function Dashboard() {
           const data = await res.json();
           console.log("DEBUG: Received analysis data:", data);
           if (data.error) {
-            setAtsScore(0);
-            setAtsImprovements([`Error: ${data.error}`, "Please check file format (PDF/DOCX)"]);
+            setAtsScore(null); // Reset score on error
+            setAtsImprovements([`Analysis Error: ${data.error}`]);
           } else {
             setAtsScore(data.score);
             setAtsImprovements(data.improvements || []);
