@@ -190,7 +190,7 @@ export default function Report() {
       {showPlayer && sessionVideoUrl && (
         <div className="video-modal-overlay" onClick={() => setShowPlayer(false)}>
           <div className="video-modal-content premium-player" onClick={e => e.stopPropagation()}>
-            <div className="player-header">
+            <div className="player-header" style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', width: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <button 
                   onClick={() => setShowPlayer(false)} 
@@ -199,9 +199,11 @@ export default function Report() {
                 >
                   ← Back to Results
                 </button>
-                <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem' }}>Simulation Replay</h3>
               </div>
-              <button onClick={() => setShowPlayer(false)} className="close-btn">✕</button>
+              <h3 style={{ textAlign: 'center' }}>Simulation Replay</h3>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button onClick={() => setShowPlayer(false)} className="close-btn">✕</button>
+              </div>
             </div>
             
             <div className="video-container">
@@ -605,10 +607,14 @@ export default function Report() {
 
         .player-header h3 {
           margin: 0;
-          font-size: 1rem;
+          font-size: 1.1rem;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--text-secondary);
+          letter-spacing: 0.15em;
+          font-weight: 800;
+          background: linear-gradient(90deg, #ff4b2b, #ff416c);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 0 10px rgba(255, 65, 108, 0.4));
         }
 
         .video-container {
