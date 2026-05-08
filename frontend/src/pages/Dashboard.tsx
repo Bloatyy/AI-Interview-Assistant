@@ -261,6 +261,23 @@ export default function Dashboard() {
         .dashboard-wrapper {
           position: relative;
           min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        .dashboard-wrapper::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: url('../../../brain/79c043ce-2da4-4244-8eca-b950d18dc9e8/nano_banana_background_1778220464103.png');
+          background-size: cover;
+          background-position: center;
+          opacity: 0.15;
+          filter: blur(40px) brightness(0.5);
+          z-index: -2;
+          pointer-events: none;
         }
 
         .neural-mesh {
