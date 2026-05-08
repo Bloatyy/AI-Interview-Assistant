@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from 'react-router-dom';
-import { getVideo } from "../utils/db";
+import { getVideo, getQuestionVideo } from "../utils/db";
 
 export default function Report() {
   const [report, setReport] = useState<any>(null);
@@ -137,6 +137,8 @@ export default function Report() {
     downloadAnchorNode.remove();
   };
 
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+
   if (isLoading) {
     return (
       <div className="premium-container page-padding" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -148,8 +150,34 @@ export default function Report() {
     );
   }
 
+  const playQuestionVideo = async (idx: number) => {
+    try {
+      const blob = await getQuestionVideo(idx);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        setActiveVideoUrl(url);
+      } else {
+        alert("Video clip not found for this question.");
+      }
+    } catch (err) {
+      console.error("Error playing question video:", err);
+    }
+  };
+
   return (
     <div className="premium-container page-padding">
+      {/* Video Modal Overlay */}
+      {activeVideoUrl && (
+        <div className="video-modal-overlay" onClick={() => setActiveVideoUrl(null)}>
+          <div className="video-modal-content" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>Answer Replay</h3>
+              <button onClick={() => setActiveVideoUrl(null)} className="close-btn">✕</button>
+            </div>
+            <video src={activeVideoUrl} autoPlay controls style={{ width: '100%', borderRadius: '1rem' }} />
+          </div>
+        </div>
+      )}
       <div className="neural-mesh"></div>
       <div className="bg-glow"></div>
 
@@ -313,8 +341,18 @@ export default function Report() {
                     <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase' }}>Question {idx + 1}</span>
                     <h3 style={{ marginTop: '0.5rem' }}>{res.question}</h3>
                   </div>
-                  <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '4px', border: `1px solid ${getScoreColor(res.evaluation?.score || 0)}`, color: getScoreColor(res.evaluation?.score || 0), fontWeight: 700, fontSize: '1.1rem' }}>
-                    {res.evaluation?.score || 0}%
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <button 
+                      onClick={() => playQuestionVideo(idx)}
+                      className="btn-secondary"
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                      Replay Answer
+                    </button>
+                    <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '4px', border: `1px solid ${getScoreColor(res.evaluation?.score || 0)}`, color: getScoreColor(res.evaluation?.score || 0), fontWeight: 700, fontSize: '1.1rem' }}>
+                      {res.evaluation?.score || 0}%
+                    </div>
                   </div>
                 </div>
 
@@ -464,6 +502,48 @@ export default function Report() {
 
         @media print {
           .no-print { display: none !important; }
+        }
+
+        .video-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.8);
+          backdrop-filter: blur(10px);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        .video-modal-content {
+          width: 100%;
+          max-width: 800px;
+          background: #0a0a0a;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 1.5rem;
+          padding: 1.5rem;
+          position: relative;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .close-btn {
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          color: white;
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: 0.2s;
+        }
+
+        .close-btn:hover {
+          background: #ef4444;
+          border-color: #ef4444;
         }
       `}
       </style>

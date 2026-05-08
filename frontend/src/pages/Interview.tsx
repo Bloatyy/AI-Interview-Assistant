@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useClerk } from '@clerk/clerk-react';
 import AIVirtualInterviewer3D from '../components/AIVirtualInterviewer3D';
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { saveVideo } from "../utils/db";
+import { saveVideo, saveQuestionVideo } from "../utils/db";
 import amazonTechnicalData from "../data/amazon_technical.json";
 
 function shuffleArray(array: any[]) {
@@ -310,13 +310,23 @@ export default function Interview() {
   const startRecording = () => {
     if (stream) {
       recordingQuestionRef.current = questions[currentStep].text;
-      const recorder = new MediaRecorder(stream);
+      const stepIdx = currentStep;
+      
+      // Capture VIDEO for per-question replay
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       const chunks: Blob[] = [];
+      
       recorder.ondataavailable = (e) => chunks.push(e.data);
       recorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        await submitAnswer(audioBlob, recordingQuestionRef.current);
-        // Resolve the promise so handleNext knows the last recording is submitted
+        const videoBlob = new Blob(chunks, { type: 'video/webm' });
+        
+        // Store for question-wise replay in Report
+        console.log(`Saving question video for index ${stepIdx}`);
+        await saveQuestionVideo(stepIdx, videoBlob);
+        
+        // Submit for AI evaluation
+        await submitAnswer(videoBlob, recordingQuestionRef.current);
+        
         if (lastRecordingResolve.current) {
           lastRecordingResolve.current();
           lastRecordingResolve.current = null;
