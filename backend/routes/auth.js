@@ -17,7 +17,7 @@ async function sendVerificationEmail(email, name, verificationToken) {
   const axios = require('axios');
   const key = process.env.BREVO_API_KEY;
   
-  const verificationUrl = `${process.env.BACKEND_URL}api/auth/verify/${verificationToken}`;
+  const verificationUrl = `${process.env.BACKEND_URL.replace(/\/$/, '')}/api/auth/verify/${verificationToken}`;
 
   const data = {
     subject: 'Verify your InterviewMitra Account',
@@ -56,7 +56,6 @@ router.post('/signup', async (req, res) => {
     return res.status(400).json({ message: 'All fields are required.' });
   }
 
-  let createdUser = null;
   try {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -72,7 +71,7 @@ router.post('/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
-    createdUser = await User.create({
+    await User.create({
       email,
       password: hashedPassword,
       name,
@@ -80,26 +79,22 @@ router.post('/signup', async (req, res) => {
       isVerified: false,
     });
 
-    // Send the magic link — if this fails, we'll clean up the user
-    await sendVerificationEmail(email, name, verificationToken);
+    // Try to send verification email — non-blocking, signup succeeds either way
+    try {
+      await sendVerificationEmail(email, name, verificationToken);
+      console.log('Verification email sent to', email);
+    } catch (emailErr) {
+      console.error('Brevo email failed (non-blocking):', emailErr?.response?.data?.message || emailErr.message);
+    }
 
     res.status(201).json({
       message: 'Account created! Please check your email and click the verification link to activate your account.',
     });
   } catch (err) {
-    console.error('Signup error:', err?.response?.text || err.message || err);
-
-    // Clean up the DB record if email failed so user can retry
-    if (createdUser) {
-      await User.deleteOne({ _id: createdUser._id }).catch(() => {});
-    }
-
-    const errorDetail = err?.response?.text
-      ? JSON.parse(err.response.text)?.message
-      : err.message;
+    console.error('Signup error:', err.message || err);
 
     res.status(500).json({
-      message: `Signup failed: ${errorDetail || 'Unknown error. Please try again.'}`,
+      message: `Signup failed: ${err.message || 'Unknown error. Please try again.'}`,
     });
   }
 });
@@ -109,15 +104,50 @@ router.get('/verify/:token', async (req, res) => {
   try {
     const user = await User.findOne({ verificationToken: req.params.token });
     if (!user) {
-      return res.status(400).send('This verification link is invalid or has already been used.');
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html>
+          <head><meta charset="utf-8"><title>Invalid Link</title></head>
+          <body style="margin:0;background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;">
+            <div>
+              <div style="font-size:3rem;">❌</div>
+              <h1 style="color:#ef4444;margin:1rem 0;">Invalid Link</h1>
+              <p style="color:#888;">This verification link is invalid or has already been used.</p>
+            </div>
+          </body>
+        </html>
+      `);
     }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    // Redirect to frontend with success flag so the modal auto-opens
-    res.redirect(`${process.env.FRONTEND_URL}?verified=true`);
+    const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'http://localhost:5173';
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Email Verified — InterviewMitra</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="margin:0;background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;box-sizing:border-box;">
+          <div>
+            <div style="font-size:4rem;margin-bottom:1rem;">✅</div>
+            <h1 style="color:#ffb800;font-size:2rem;margin:0 0 0.5rem;">You're Verified!</h1>
+            <p style="color:#aaa;font-size:1rem;margin:0 0 2rem;max-width:360px;">
+              Your InterviewMitra account has been successfully activated.<br>You can now log in and start your journey.
+            </p>
+            <a href="${frontendUrl}/?verified=true"
+               style="display:inline-block;padding:0.85rem 2.5rem;background:#ffb800;color:#000;font-weight:700;font-size:1rem;border-radius:8px;text-decoration:none;">
+              Go to Login
+            </a>
+          </div>
+        </body>
+      </html>
+    `);
   } catch (err) {
     console.error('Verification error:', err);
     res.status(500).send('Server Error during verification. Please try again.');
@@ -156,7 +186,7 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 // @route GET /api/auth/google/callback
 router.get('/google/callback', passport.authenticate('google', { session: false }), (req, res) => {
   const token = generateToken(req.user._id);
-  res.redirect(`${process.env.FRONTEND_URL}auth-success?token=${token}`);
+  res.redirect(`${process.env.FRONTEND_URL.replace(/\/$/, '')}/auth-success?token=${token}`);
 });
 
 module.exports = router;
