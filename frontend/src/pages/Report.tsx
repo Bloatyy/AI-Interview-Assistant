@@ -3,66 +3,54 @@ import { Link } from 'react-router-dom';
 import { getVideo } from "../utils/db";
 
 export default function Report() {
-  const [postureScore, setPostureScore] = useState(0);
-  const [results, setResults] = useState<any[]>([]);
+  const [report, setReport] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const score = localStorage.getItem("final_posture_score");
-    if (score) setPostureScore(parseInt(score));
-    
-    const interviewResults = localStorage.getItem("interview_results");
-    if (interviewResults) {
-      setResults(JSON.parse(interviewResults));
-    } else {
-      // Hardcoded Mock Report for immediate visibility
-      setResults([
-        {
-          question: "Tell me about a time you had to deal with a difficult colleague.",
-          evaluation: {
-            score: 85,
-            feedback: "Great use of the STAR method. You clearly identified the conflict and demonstrated strong emotional intelligence.",
-            strengths: ["Clear communication", "Resolution-oriented approach", "Professional tone"],
-            weaknesses: ["Could provide more metrics on the outcome"],
-            transcript: "In my previous role, I had a teammate who was resistant to new workflows. I scheduled a one-on-one to understand their concerns and we eventually found a middle ground that improved our sprint velocity by 15%."
-          }
-        },
-        {
-          question: "How would you design a scalable notification system?",
-          evaluation: {
-            score: 92,
-            feedback: "Excellent technical depth. Your mention of message queues and database sharding shows senior-level architectural thinking.",
-            strengths: ["System design expertise", "Scalability focus", "Attention to edge cases"],
-            weaknesses: ["Didn't mention cost optimization"],
-            transcript: "I would use a microservices architecture with a Pub/Sub model using Redis or Kafka. For the database, I'd use a NoSQL solution for high-write performance and implement a CDN for static notification assets."
-          }
-        }
-      ]);
-      setPostureScore(88);
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    if (!user || !user.id) {
+      setIsLoading(false);
+      return;
     }
 
+    const fetchLatestReport = async () => {
+      try {
+        const res = await fetch(`http://localhost:5001/api/reports/latest/${user.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setReport(data);
+        }
+      } catch (err) {
+        console.error("Error fetching latest report:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLatestReport();
+
     const loadVideo = async () => {
-      const blob = await getVideo();
-      if (blob) {
-        setVideoUrl(URL.createObjectURL(blob));
+      try {
+        const blob = await getVideo();
+        if (blob) {
+          setVideoUrl(URL.createObjectURL(blob));
+        }
+      } catch (err) {
+        console.error("Video load error:", err);
       }
     };
     loadVideo();
   }, []);
 
-  const avgCommScore = results.length > 0 
-    ? Math.round(results.reduce((acc, r) => acc + r.evaluation.score, 0) / results.length)
-    : 0;
-
-  const avgConfidence = results.length > 0
-    ? Math.round(results.reduce((acc, r) => acc + (r.evaluation.confidence || 0), 0) / results.length)
-    : 0;
-
-  const totalFillers = results.reduce((acc, r) => acc + (r.evaluation.filler_count || 0), 0);
-
-  const overallScore = results.length > 0
-    ? Math.round(avgCommScore * 0.4 + avgConfidence * 0.3 + postureScore * 0.3)
-    : postureScore;
+  const overallScore = report?.overallScore || 0;
+  const postureScore = report?.postureScore || 0;
+  const avgCommScore = report?.avgCommunication || 0;
+  const avgConfidence = report?.avgConfidence || 0;
+  const totalFillers = report?.totalFillers || 0;
+  const results = report?.results || [];
 
   const downloadReport = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
@@ -80,13 +68,27 @@ export default function Report() {
     downloadAnchorNode.remove();
   };
 
+  if (isLoading) {
+    return (
+      <div className="premium-container page-padding" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div className="neural-loader">
+          <div className="loader-ring"></div>
+          <div className="loader-ring"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="premium-container page-padding">
+      <div className="neural-mesh"></div>
+      <div className="bg-glow"></div>
+
       <div className="report-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>Your Interview <span className="text-gradient">Report</span></h1>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-          <div className="glass-card" style={{ padding: '2rem 4rem' }}>
-            <div style={{ fontSize: '4rem', fontWeight: 800, color: 'var(--accent-color)' }}>{overallScore}%</div>
+          <div className="glass-card" style={{ padding: '2rem 4rem', border: '1px solid var(--accent)' }}>
+            <div style={{ fontSize: '4rem', fontWeight: 800, color: 'var(--accent)' }}>{overallScore}%</div>
             <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Overall Performance</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -118,7 +120,7 @@ export default function Report() {
       <div className="score-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
         <div className="glass-card" style={{ padding: '2rem' }}>
           <h3>Confidence</h3>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: 'var(--accent-color)' }}>{avgConfidence}%</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: 'var(--accent)' }}>{avgConfidence}%</div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Derived from speech fluency and directness.</p>
         </div>
         <div className="glass-card" style={{ padding: '2rem' }}>
@@ -133,7 +135,7 @@ export default function Report() {
         </div>
         <div className="glass-card" style={{ padding: '2rem' }}>
           <h3>Technical</h3>
-          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: 'var(--primary-color)' }}>{avgCommScore}%</div>
+          <div style={{ fontSize: '2.5rem', fontWeight: 700, margin: '1rem 0', color: '#3b82f6' }}>{avgCommScore}%</div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Accuracy and depth of technical answers.</p>
         </div>
       </div>
@@ -146,19 +148,19 @@ export default function Report() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {results.map((res, idx) => (
+            {results.map((res: any, idx: number) => (
               <div key={idx} className="glass-card" style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
                   <div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--accent-color)', fontWeight: 700, textTransform: 'uppercase' }}>Question {idx + 1}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase' }}>Question {idx + 1}</span>
                     <h3 style={{ marginTop: '0.5rem' }}>{res.question}</h3>
                   </div>
-                  <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '2rem', border: '1px solid var(--accent-color)', color: 'var(--accent-color)', fontWeight: 700 }}>
+                  <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid var(--accent)', color: 'var(--accent)', fontWeight: 700 }}>
                     {res.evaluation.score}%
                   </div>
                 </div>
 
-                <div className="transcript-box" style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '1.5rem', borderLeft: '4px solid var(--primary-color)' }}>
+                <div className="transcript-box" style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '1rem', marginBottom: '1.5rem', borderLeft: '4px solid var(--accent)' }}>
                   <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>Transcription (Whisper AI)</span>
                   <p style={{ fontStyle: 'italic', color: 'var(--text-primary)' }}>"{res.evaluation.transcript || 'No response detected.'}"</p>
                 </div>
@@ -174,7 +176,7 @@ export default function Report() {
                     </ul>
                   </div>
                   <div>
-                    <h4 style={{ color: 'var(--accent-color)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={{ color: 'var(--accent)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                       Areas for Improvement
                     </h4>
@@ -189,11 +191,38 @@ export default function Report() {
         )}
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '4rem' }}>
-        <Link to="/" className="btn-primary no-print" style={{ padding: '1rem 4rem', fontSize: '1.1rem' }}>
-          Practice Again
+      <div className="no-print" style={{ textAlign: 'center', marginTop: '4rem', paddingBottom: '4rem' }}>
+        <Link to="/dashboard" className="btn-primary" style={{ padding: '1rem 4rem', fontSize: '1.1rem', textDecoration: 'none', display: 'inline-block' }}>
+          RETURN TO DASHBOARD
         </Link>
       </div>
+
+      <style>{`
+        .premium-container {
+          max-width: 100% !important;
+          margin: 0 !important;
+          width: 100% !important;
+          padding-left: 4rem !important;
+          padding-right: 4rem !important;
+          position: relative;
+          min-height: 100vh;
+          background: #000;
+          color: white;
+        }
+
+        .glass-card {
+          transition: var(--transition);
+        }
+
+        .glass-card:hover {
+          background: rgba(255,255,255,0.04);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+          .no-print { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
