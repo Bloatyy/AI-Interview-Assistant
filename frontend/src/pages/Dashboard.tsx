@@ -109,7 +109,7 @@ export default function Dashboard() {
           console.log("DEBUG: Received analysis data:", data);
           if (data.error) {
             setAtsScore(null); // Reset score on error
-            setAtsImprovements([`Analysis Error: ${data.error}`]);
+            setAtsImprovements([data.error]);
           } else {
             setAtsScore(data.score);
             setAtsImprovements(data.improvements || []);

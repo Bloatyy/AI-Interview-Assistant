@@ -37,10 +37,10 @@ def analyze_cv(file_path):
     text = extract_text_from_file(file_path)
     
     if not text:
-        return {"error": "Invalid file format. Please upload a PDF or DOCX resume."}
+        return {"error": "**NOT A CV FILE**"}
         
     if not is_valid_resume(text):
-        return {"error": "The uploaded file does not appear to be a valid resume. Please ensure it contains sections like Experience, Education, and Skills."}
+        return {"error": "**NOT A CV FILE**"}
 
     print(f"DEBUG: Text extracted ({len(text)} chars). Sending to Groq...")
     prompt = f"""
