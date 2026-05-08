@@ -218,11 +218,29 @@ export default function Interview() {
     }
   }, [preSessionCountdown]);
 
+  const notificationTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+
   const addNotification = (msg: string) => {
-    setNotifications(prev => [...prev, msg]);
-    setTimeout(() => {
-      setNotifications(prev => prev.slice(1));
-    }, 5000);
+    setNotifications(prev => {
+      if (prev.includes(msg)) {
+        // If message already exists, clear existing timeout and reset it
+        if (notificationTimeouts.current[msg]) {
+          clearTimeout(notificationTimeouts.current[msg]);
+        }
+        notificationTimeouts.current[msg] = setTimeout(() => {
+          setNotifications(curr => curr.filter(n => n !== msg));
+          delete notificationTimeouts.current[msg];
+        }, 5000);
+        return prev;
+      }
+      
+      // New alert: Add to state and set timeout
+      notificationTimeouts.current[msg] = setTimeout(() => {
+        setNotifications(curr => curr.filter(n => n !== msg));
+        delete notificationTimeouts.current[msg];
+      }, 5000);
+      return [...prev, msg];
+    });
   };
 
   const startInterview = () => {
@@ -550,11 +568,11 @@ export default function Interview() {
 
       <div className="notification-area">
         {notifications.map((n, i) => (
-          <div key={i} className="warning-toast reveal-up">
-            <span className="warning-icon">⚠️</span>
-            <div className="warning-content">
-              <span className="warning-title">Alert</span>
-              <span className="warning-msg">{n}</span>
+          <div key={i} className="status-toast">
+            <div className="status-indicator"></div>
+            <div className="status-content">
+              <span className="status-tag">System Intelligence</span>
+              <span className="status-msg">{n}</span>
             </div>
           </div>
         ))}
@@ -830,6 +848,71 @@ export default function Interview() {
       </div>
 
       <style>{`
+        .notification-area {
+          position: fixed;
+          top: 3rem;
+          left: 3rem;
+          z-index: 9999;
+          pointer-events: none;
+          /* Removed flex layout to allow absolute overlapping */
+        }
+
+        .status-toast {
+          position: absolute;
+          top: 0;
+          left: 0;
+          pointer-events: auto;
+          background: rgba(10, 10, 10, 0.85);
+          backdrop-filter: blur(25px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-left: 4px solid var(--accent);
+          padding: 1rem 1.5rem;
+          border-radius: 0.75rem;
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+          min-width: 320px;
+          animation: slide-in-left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.4s ease, opacity 0.4s ease;
+        }
+
+        @keyframes slide-in-left {
+          from { opacity: 0; transform: translateX(-40px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-indicator {
+          width: 8px;
+          height: 8px;
+          background: var(--accent);
+          border-radius: 50%;
+          box-shadow: 0 0 10px var(--accent);
+          flex-shrink: 0;
+        }
+
+        .status-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .status-tag {
+          font-size: 0.65rem;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: var(--accent);
+          font-weight: 800;
+          opacity: 0.8;
+        }
+
+        .status-msg {
+          font-size: 0.9rem;
+          color: white;
+          font-weight: 500;
+          line-height: 1.4;
+        }
+
         .glass-card {
           background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
           backdrop-filter: blur(20px) saturate(180%);
