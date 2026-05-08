@@ -63,7 +63,7 @@ function App() {
   }, [clerkUser, isClerkLoaded]);
 
   useEffect(() => {
-    if (searchParams.get('verified') === 'true') {
+    if (searchParams.get('verified') === 'true' || searchParams.get('auth') === 'true') {
       setIsAuthModalOpen(true);
     }
   }, [searchParams]);
