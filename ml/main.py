@@ -9,6 +9,7 @@ from evaluation import evaluate_answer
 from anti_cheat import detect_cheating
 from cv_analyzer import analyze_cv
 from technical_evaluator import evaluate_thought_process
+from look_analyzer import analyze_looks
 
 app = FastAPI(title="InterviewMitra ML Backend")
 
@@ -81,6 +82,18 @@ async def anti_cheat(file: UploadFile = File(...)):
         return {"error": "Invalid image", "is_cheating": False}
         
     analysis = detect_cheating(frame)
+    return analysis
+
+@app.post("/analyze-looks")
+async def analyze_looks_endpoint(file: UploadFile = File(...)):
+    contents = await file.read()
+    nparr = np.frombuffer(contents, np.uint8)
+    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    if frame is None:
+        return {"error": "Invalid image"}
+        
+    analysis = analyze_looks(frame)
     return analysis
 
 @app.post("/analyze-cv")

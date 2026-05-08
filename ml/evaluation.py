@@ -50,19 +50,22 @@ def evaluate_answer(transcript, question_text, body_language_data=None):
     filler_analysis = count_fillers(transcript)
 
     body_lang_context = ""
-    integrity_metrics = {"posture": "Unknown", "eye_gaze": "Unknown", "face_detected": "Unknown"}
+    integrity_metrics = {"posture": "Unknown", "eye_gaze": "Unknown", "face_detected": "Unknown", "attire": "Unknown", "grooming": "Unknown"}
     if body_language_data:
         integrity_metrics = body_language_data
         body_lang_context = f"""
-        === BODY LANGUAGE / INTEGRITY METRICS ===
+        === VISUAL / PROFESSIONALISM METRICS ===
         - Posture: {body_language_data.get('posture', 'Unknown')}
         - Eye Contact (Gaze): {body_language_data.get('eye_gaze', 'Unknown')}
         - Face Visible: {body_language_data.get('face_detected', 'Unknown')}
+        - Attire: {body_language_data.get('attire', 'Unknown')}
+        - Grooming: {body_language_data.get('grooming', 'Unknown')}
+        - Looks Grade: {body_language_data.get('looks_grade', 'N/A')}
         """
 
     prompt = f"""
     You are a SENIOR AI INTERVIEW EVALUATOR at a top-tier tech company. 
-    Analyze this candidate's response with extreme rigor across ALL dimensions.
+    Analyze this candidate's response with extreme rigor across ALL dimensions, including their professional appearance.
 
     === QUESTION ===
     {question_text}
@@ -81,26 +84,22 @@ def evaluate_answer(transcript, question_text, body_language_data=None):
     1. **CONFIDENCE (0-100)**: 
        - Speech fluency and directness of answers
        - Hesitation patterns (filler words indicate low confidence)
-       - Assertiveness of language (uses "I believe" vs "maybe" / "I guess")
+       - Assertiveness of language
        - Penalty: -3 points per filler word detected
-       - If many fillers (>5), cap at 50 max
 
     2. **TECHNICAL SCORE (0-100)**:
        - Depth and accuracy of technical content
        - Use of correct terminology and concepts
-       - Logical structure of explanation
-       - For behavioral questions, rate communication quality instead
 
-    3. **INTEGRITY SCORE (0-100)**:
-       - Based on body language metrics provided above
-       - Good posture + Centered gaze + Face visible = high integrity
-       - Poor posture / looking away / no face = low integrity
-       - If posture is "Good" and eye_gaze is "Centered" and face is "Active": 90-100
-       - If any metric is poor/warning: 50-70
-       - If face not detected: 20-40
+    3. **INTEGRITY & PROFESSIONALISM (0-100)**:
+       - Based on body language AND appearance metrics provided above.
+       - Good posture + Centered gaze + Formal attire = high score.
+       - Casual attire or poor grooming should result in a lower professionalism score (penalty of 10-20 points).
+       - If posture is "Good" and attire is "Formal": 90-100.
+       - If attire is "Casual": Max 75 for this axis.
 
     4. **OVERALL SCORE (0-100)**:
-       - Weighted: Technical 40% + Confidence 30% + Integrity 30%
+       - Weighted: Technical 40% + Confidence 30% + Professionalism 30%
 
     Return ONLY valid JSON with these exact keys:
     {{
@@ -114,7 +113,7 @@ def evaluate_answer(transcript, question_text, body_language_data=None):
         "weaknesses": ["<weakness 1>", "<weakness 2>", "<weakness 3>"],
         "confidence_analysis": "<1 sentence about their speaking confidence>",
         "technical_analysis": "<1 sentence about their technical depth>",
-        "integrity_analysis": "<1 sentence about body language>"
+        "integrity_analysis": "<1 sentence about professionalism and appearance>"
     }}
     """
 

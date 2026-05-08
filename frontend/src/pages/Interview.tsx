@@ -53,9 +53,52 @@ export default function Interview() {
   const [currentStep, setCurrentStep] = useState(0);
   const getInitialTime = () => protocol === 'technical' ? 300 : 120;
   const [timeLeft, setTimeLeft] = useState(getInitialTime());
-  const [isRecording, setIsRecording] = useState(false);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [preSessionCountdown, setPreSessionCountdown] = useState<number | null>(null);
+  const [professionalismData, setProfessionalismData] = useState<any>(null);
+
+  // Analyze looks at the start of the interview
+  useEffect(() => {
+    if (isInterviewStarted && videoElement) {
+      const analyzeProfessionalism = async () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = videoElement.videoWidth || 640;
+          canvas.height = videoElement.videoHeight || 480;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(videoElement, 0, 0);
+          
+          canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            const formData = new FormData();
+            formData.append("file", blob, "looks.jpg");
+            
+            try {
+              const res = await fetch("http://localhost:8000/analyze-looks", {
+                method: "POST",
+                body: formData
+              });
+              
+              if (res.ok) {
+                const data = await res.json();
+                console.log("Neural Look Analysis:", data);
+                setProfessionalismData(data);
+                setNotifications(prev => [...prev.slice(-2), `Appearance Audited: ${data.attire} | ${data.grooming}`]);
+              }
+            } catch (err) {
+              console.warn("ML Look analysis unreachable, using baseline metrics.");
+            }
+          }, "image/jpeg");
+        } catch (err) {
+          console.error("Look analysis snapshot failed:", err);
+        }
+      };
+      
+      // Audit appearance after 3 seconds of live simulation
+      setTimeout(analyzeProfessionalism, 3000);
+    }
+  }, [isInterviewStarted]);
+
   const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDataSaved, setIsDataSaved] = useState(false);
@@ -294,6 +337,13 @@ export default function Interview() {
     formData.append("posture", postureStatus);
     formData.append("eye_gaze", eyeGazeStatus);
     formData.append("face_detected", faceDetected);
+    
+    // Include professionalism data from start of session
+    if (professionalismData) {
+      formData.append("attire", professionalismData.attire || "Unknown");
+      formData.append("grooming", professionalismData.grooming || "Unknown");
+      formData.append("looks_grade", professionalismData.looks_grade?.toString() || "0");
+    }
     
     const submissionPromise = (async () => {
       const controller = new AbortController();

@@ -105,6 +105,8 @@ export default function Report() {
     return 'F';
   };
 
+  const capitalize = (str: string) => str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
   const downloadReport = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
       overallScore,
@@ -241,23 +243,28 @@ export default function Report() {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>Total "um", "uh", "like", "you know", "basically" detected across all answers.</p>
         </div>
 
-        {/* INTEGRITY */}
+        {/* PROFESSIONALISM */}
         <div className="glass-card metric-card" style={{ padding: '2rem', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '3px', background: `linear-gradient(90deg, ${getScoreColor(integrityScore)}, transparent)` }}></div>
-          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Integrity</h3>
+          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Professionalism</h3>
           <div style={{ fontSize: '3rem', fontWeight: 800, margin: '0.5rem 0', color: getScoreColor(integrityScore), lineHeight: 1 }}>{integrityScore}%</div>
-          <div style={{ 
-            display: 'inline-block', 
-            padding: '0.2rem 0.6rem', 
-            borderRadius: '4px', 
-            background: `${getScoreColor(integrityScore)}15`, 
-            color: getScoreColor(integrityScore), 
-            fontSize: '0.7rem', 
-            fontWeight: 700,
-            marginBottom: '0.8rem',
-            border: `1px solid ${getScoreColor(integrityScore)}30`
-          }}>{getGrade(integrityScore)}</div>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>Camera presence, posture consistency, and eye contact throughout the session.</p>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.8rem' }}>
+            <div style={{ 
+              padding: '0.2rem 0.6rem', 
+              borderRadius: '4px', 
+              background: `${getScoreColor(integrityScore)}15`, 
+              color: getScoreColor(integrityScore), 
+              fontSize: '0.7rem', 
+              fontWeight: 700,
+              border: `1px solid ${getScoreColor(integrityScore)}30`
+            }}>{getGrade(integrityScore)}</div>
+            {results[0]?.evaluation?.attire && (
+              <div style={{ padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '0.7rem', fontWeight: 700, border: '1px solid rgba(255,255,255,0.1)' }}>
+                {capitalize(results[0].evaluation.attire)}
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>Professional attire, grooming, posture, and gaze stability analysis.</p>
         </div>
 
         {/* TECHNICAL */}
@@ -285,7 +292,7 @@ export default function Report() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Score Formula</span>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-            Overall = Technical × 0.4 + Confidence × 0.3 + Integrity × 0.3
+            Overall = Technical × 0.4 + Confidence × 0.3 + Professionalism × 0.3
           </span>
         </div>
       </div>
