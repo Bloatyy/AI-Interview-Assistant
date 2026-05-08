@@ -624,69 +624,42 @@ export default function Interview() {
                         {/* AI Human Presence (Background) */}
                         <AIVirtualInterviewer3D textToSpeak={questions[currentStep].text} />
 
-                        <div style={{
+                        <div className="interview-content-overlay" style={{
                           position: 'absolute',
-                          bottom: '4rem',
+                          bottom: '2rem',
                           left: '50%',
                           transform: 'translateX(-50%)',
-                          width: '80%',
-                          padding: '1.25rem 2rem',
-                          background: 'rgba(0,0,0,0.6)',
-                          backdropFilter: 'blur(15px)',
-                          borderRadius: '1.25rem',
-                          border: '1px solid rgba(255,255,255,0.15)',
-                          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                          zIndex: 20,
-                          textAlign: 'center'
+                          width: '90%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '1rem',
+                          zIndex: 25
                         }}>
-                          <div className="ai-question-text" style={{ 
-                            fontSize: protocol === 'technical' ? '1.1rem' : '1.5rem', 
-                            fontWeight: 500,
-                            marginBottom: 0,
-                            lineHeight: 1.4,
-                            color: 'white',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                          {/* Question Box */}
+                          <div className="question-box" style={{
+                            padding: '1.25rem 2rem',
+                            background: 'rgba(0,0,0,0.7)',
+                            backdropFilter: 'blur(20px)',
+                            borderRadius: '1.25rem',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+                            textAlign: 'center'
                           }}>
-                            {questions[currentStep].text}
+                            <div className="ai-question-text" style={{ 
+                              fontSize: protocol === 'technical' ? '1.1rem' : '1.35rem', 
+                              fontWeight: 500,
+                              lineHeight: 1.5,
+                              color: 'white',
+                              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                            }}>
+                              {questions[currentStep].text}
+                            </div>
                           </div>
                         </div>
 
-                        {protocol === 'technical' && (
-                          <div className="thought-process-container" style={{ 
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: '80%', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            gap: '1.5rem',
-                            zIndex: 25
-                          }}>
-                            <textarea 
-                              className="thought-area"
-                              placeholder="Describe your thinking and thought process here..."
-                              value={thoughtProcess}
-                              onChange={(e) => setThoughtProcess(e.target.value)}
-                              style={{ 
-                                width: '100%', 
-                                height: '200px', 
-                                background: 'rgba(0,0,0,0.6)', 
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid var(--accent)', 
-                                borderRadius: '1rem', 
-                                padding: '1.25rem',
-                                color: 'white',
-                                fontFamily: 'var(--font-body)',
-                                resize: 'none'
-                              }}
-                            />
-                          </div>
-                        )}
-
                         <div style={{ position: 'absolute', bottom: '3rem', width: '100%', display: 'none', justifyContent: 'center', gap: '2rem' }}>
                           <button onClick={handleNext} className="btn-secondary" style={{ padding: '0.8rem 2.5rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
-                            Skip Question
+                            Next Question
                           </button>
                         </div>
                       </>
@@ -697,7 +670,7 @@ export default function Interview() {
                       </div>
                     )}
                   </div>
-
+ 
                   {/* User Half (Right) */}
                   <div className="view-half user-view">
                     <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -705,67 +678,127 @@ export default function Interview() {
                 </div>
               )}
             </div>
-
+ 
             {/* Dedicated Action Bar (Below Cams, Inside Border) */}
             <div className="hud-bottom-bar" style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '1.25rem 2rem',
-              background: 'rgba(0,0,0,0.2)',
-              borderTop: '1px solid rgba(255,255,255,0.05)',
-              minHeight: '60px'
+              padding: '1rem 2rem',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(30px)',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+              minHeight: '80px',
+              height: 'auto',
+              zIndex: 100,
+              transition: 'all 0.4s ease'
             }}>
               {/* Left: Status */}
               <div className="live-label-left" style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
+                gap: '0.75rem',
                 background: 'rgba(255,255,255,0.03)',
-                padding: '0.5rem 1rem',
+                padding: '0.6rem 1.25rem',
                 borderRadius: '2rem',
-                border: '1px solid rgba(255,255,255,0.05)'
+                border: '1px solid rgba(255,255,255,0.08)',
+                alignSelf: 'center'
               }}>
-                <div className="indicator-dot" style={{ width: '8px', height: '8px', background: '#ff4b2b', borderRadius: '50%', boxShadow: '0 0 10px #ff4b2b', animation: 'blink 1s infinite' }}></div>
-                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  {isInterviewStarted ? 'Simulation Active' : 'Camera Feed'}
+                <div className="indicator-dot" style={{ width: '8px', height: '8px', background: '#ff4b2b', borderRadius: '50%', boxShadow: '0 0 12px #ff4b2b', animation: 'blink 1.2s infinite' }}></div>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                  {isInterviewStarted ? 'SIMULATION LIVE' : 'FEED ACTIVE'}
                 </span>
               </div>
-
-              {/* Center: Interactive Controls */}
+ 
+              {/* Center: Interactive Controls + Thought Process */}
               {isInterviewStarted && !isSubmitting && (
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '1.5rem', 
+                  flex: 1, 
+                  justifyContent: 'center',
+                  padding: '0 3rem'
+                }}>
+                  {/* Thought Process Area - Now expands within the bar */}
+                  {(protocol === 'technical' || protocol === 'hr') && (
+                    <div style={{ flex: 1, maxWidth: '700px' }}>
+                      <textarea 
+                        className="neural-thought-input"
+                        placeholder="Neural Logic: Describe your thinking here..."
+                        value={thoughtProcess}
+                        onChange={(e) => setThoughtProcess(e.target.value)}
+                        style={{ 
+                          width: '100%', 
+                          height: '42px', 
+                          background: 'rgba(255,255,255,0.03)', 
+                          backdropFilter: 'blur(15px)',
+                          border: '1px solid rgba(255,255,255,0.1)', 
+                          borderRadius: '1.25rem', 
+                          padding: '0.6rem 1.25rem',
+                          color: 'white',
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '0.85rem',
+                          resize: 'none',
+                          outline: 'none',
+                          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                          lineHeight: '1.5',
+                          overflow: 'hidden',
+                          margin: '0.5rem 0'
+                        }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.height = '160px';
+                          e.currentTarget.style.borderRadius = '1rem';
+                          e.currentTarget.style.borderColor = 'var(--accent)';
+                          e.currentTarget.style.background = 'rgba(10,10,10,0.6)';
+                          e.currentTarget.style.overflow = 'auto';
+                        }}
+                        onBlur={(e) => {
+                          if (thoughtProcess === "") {
+                            e.currentTarget.style.height = '42px';
+                            e.currentTarget.style.borderRadius = '1.25rem';
+                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                            e.currentTarget.style.overflow = 'hidden';
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <button 
                     onClick={handleNext}
                     className="btn-secondary"
                     style={{
-                      padding: '0.6rem 2.5rem',
-                      background: 'rgba(255,184,0,0.1)',
+                      padding: '0.7rem 2rem',
+                      background: 'rgba(255,184,0,0.05)',
                       border: '1px solid rgba(255,184,0,0.2)',
                       borderRadius: '2rem',
                       color: 'var(--accent)',
                       fontSize: '0.75rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.1em',
-                      transition: 'all 0.3s ease'
+                      fontWeight: 800,
+                      letterSpacing: '0.12em',
+                      transition: 'all 0.3s ease',
+                      whiteSpace: 'nowrap',
+                      alignSelf: 'center'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255,184,0,0.2)';
-                      e.currentTarget.style.boxShadow = '0 0 20px rgba(255,184,0,0.2)';
+                      e.currentTarget.style.background = 'rgba(255,184,0,0.15)';
+                      e.currentTarget.style.boxShadow = '0 0 25px rgba(255,184,0,0.2)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255,184,0,0.1)';
+                      e.currentTarget.style.background = 'rgba(255,184,0,0.05)';
                       e.currentTarget.style.boxShadow = 'none';
                     }}
                   >
-                    SKIP QUESTION
+                    NEXT QUESTION
                   </button>
                 </div>
               )}
-
+ 
               {/* Right: Metadata */}
-              <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em' }}>
-                INT-MD-V2
+              <div className="no-print" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.25em', fontWeight: 600, alignSelf: 'center' }}>
+                INT-MD-V2.0
               </div>
             </div>
           </div>

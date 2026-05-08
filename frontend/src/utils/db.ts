@@ -1,7 +1,7 @@
 // Simple IndexedDB wrapper for storing interview video
 export async function saveVideo(blob: Blob) {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("InterviewDB", 1);
+    const request = indexedDB.open("InterviewDB", 2); // Bumped version to ensure store creation
     request.onupgradeneeded = (e: any) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains("videos")) {
@@ -10,6 +10,10 @@ export async function saveVideo(blob: Blob) {
     };
     request.onsuccess = (e: any) => {
       const db = e.target.result;
+      if (!db.objectStoreNames.contains("videos")) {
+        console.error("IndexedDB: 'videos' store still missing after upgrade.");
+        return resolve(false);
+      }
       const transaction = db.transaction("videos", "readwrite");
       const store = transaction.objectStore("videos");
       store.put(blob, "session_video");
@@ -21,7 +25,7 @@ export async function saveVideo(blob: Blob) {
 
 export async function getVideo(): Promise<Blob | null> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("InterviewDB", 1);
+    const request = indexedDB.open("InterviewDB", 2);
     request.onsuccess = (e: any) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains("videos")) return resolve(null);
@@ -29,6 +33,12 @@ export async function getVideo(): Promise<Blob | null> {
       const store = transaction.objectStore("videos");
       const getRequest = store.get("session_video");
       getRequest.onsuccess = () => resolve(getRequest.result);
+    };
+    request.onupgradeneeded = (e: any) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains("videos")) {
+        db.createObjectStore("videos");
+      }
     };
     request.onerror = () => reject(request.error);
   });

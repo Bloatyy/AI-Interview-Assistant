@@ -17,16 +17,21 @@ export default function Report() {
     }
 
     const fetchLatestReport = async () => {
+      let dataFound = false;
       try {
         const res = await fetch(`http://localhost:5001/api/reports/latest/${user.id}`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.results && data.results.length > 0) {
             setReport(data);
-            return;
+            dataFound = true;
           }
         }
-        
+      } catch (err) {
+        console.error("Error fetching latest report from backend:", err);
+      }
+
+      if (!dataFound) {
         // FALLBACK: If backend fails or is empty, try localStorage
         console.log("No backend report found, checking localStorage fallback...");
         const localResults = JSON.parse(localStorage.getItem("interview_results") || "[]");
@@ -54,11 +59,8 @@ export default function Report() {
             results: localResults
           });
         }
-      } catch (err) {
-        console.error("Error fetching latest report:", err);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     fetchLatestReport();
