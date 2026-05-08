@@ -2,17 +2,16 @@ const mongoose = require('mongoose');
 
 const ReportSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String, // Support both ObjectId strings and social auth strings
     required: true
   },
   company: String,
   role: String,
-  overallScore: Number,
-  postureScore: Number,
-  avgCommunication: Number,
-  avgConfidence: Number,
-  totalFillers: Number,
+  overallScore: { type: Number, default: 0 },
+  postureScore: { type: Number, default: 0 },
+  avgCommunication: { type: Number, default: 0 },
+  avgConfidence: { type: Number, default: 0 },
+  totalFillers: { type: Number, default: 0 },
   results: [
     {
       question: String,
@@ -31,6 +30,6 @@ const ReportSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+}, { strict: false }); // Allow extra AI metrics to be saved without being in schema
 
 module.exports = mongoose.model('Report', ReportSchema);

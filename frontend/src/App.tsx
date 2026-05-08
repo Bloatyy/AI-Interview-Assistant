@@ -1,13 +1,25 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Routes, Route, Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Home from './pages/Home'
 import Interview from './pages/Interview'
 import Report from './pages/Report'
 import Configure from './pages/Configure'
 import Dashboard from './pages/Dashboard'
+import ResourceView from './pages/ResourceView'
 import AuthModal from './components/AuthModal'
 
-import { useClerk } from '@clerk/clerk-react'
+import { useClerk, useUser, AuthenticateWithRedirectCallback } from '@clerk/clerk-react'
+
+// ScrollToTop component to ensure pages start at the top on navigation
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
+}
 
 function App() {
   const clerk = useClerk();
@@ -27,9 +39,34 @@ function App() {
   const authenticatedRoutes = ['/dashboard', '/configure', '/interview', '/report'];
   const isAuthRoute = authenticatedRoutes.includes(location.pathname);
   
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+  const [user, setUser] = useState(() => {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
+  });
   const isAuthenticated = !!user;
+  const [searchParams] = useSearchParams();
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+
+  useEffect(() => {
+    if (isClerkLoaded && clerkUser) {
+      const email = clerkUser.primaryEmailAddress?.emailAddress || '';
+      const emailPrefix = email.split('@')[0];
+      const userData = {
+        id: clerkUser.id,
+        name: emailPrefix,
+        email: email
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', 'clerk-session');
+      setUser(userData); // Update state to trigger re-render
+    }
+  }, [clerkUser, isClerkLoaded]);
+
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      setIsAuthModalOpen(true);
+    }
+  }, [searchParams]);
 
   const handleLogout = async () => {
     try {
@@ -50,6 +87,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <style>{`
         .nav-content-auth {
           width: 100%;
@@ -189,10 +227,16 @@ function App() {
           <Route path="/interview" element={<Interview />} />
           <Route path="/report" element={<Report />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/resource/:id" element={<ResourceView />} />
+          <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
         </Routes>
       </main>
 
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onLoginSuccess={(userData: any) => setUser(userData)}
+      />
 
       {isIndexPage && (
       <footer className="footer">

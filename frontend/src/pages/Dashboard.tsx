@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 const resources = [
   {
+    id: "technical",
     title: "Technical Preparation",
     desc: "Master system design, algorithms, and domain-specific knowledge.",
     icon: (
@@ -14,6 +15,7 @@ const resources = [
     tags: ["DSA", "System Design", "Backend"]
   },
   {
+    id: "behavioral",
     title: "General & Behavioral",
     desc: "Refine your storytelling using STAR method and leadership principles.",
     icon: (
@@ -27,6 +29,7 @@ const resources = [
     tags: ["Soft Skills", "STAR Method", "Culture Fit"]
   },
   {
+    id: "cv",
     title: "CV & Resume Optimization",
     desc: "Learn how to structure your experience for maximum impact.",
     icon: (
@@ -42,41 +45,41 @@ const resources = [
   }
 ];
 
-const questionnaires = [
-  { id: 1, title: "Self-Assessment: Tech Depth", duration: "10 mins" },
-  { id: 2, title: "Behavioral Readiness Quiz", duration: "15 mins" },
-  { id: 3, title: "Company Culture Alignment", duration: "12 mins" },
-];
 
 export default function Dashboard() {
   const [atsScore, setAtsScore] = useState<number | null>(null);
+  const [atsImprovements, setAtsImprovements] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [stats, setStats] = useState({ total: 0, avgScore: 0, focus: 0, rank: "Neutral" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0); // Reset scroll to top
+    window.scrollTo(0, 0);
     const fetchStats = async () => {
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user?.id) return;
-
       try {
-        const res = await fetch(`http://localhost:5001/api/reports/latest/${user.id}`);
+        const res = await fetch(`http://localhost:5001/api/reports/user/${user.id}`);
         if (res.ok) {
-          // Note: In a production app, we'd have a specific /stats endpoint, 
-          // but for now we'll fetch all reports to calculate the dashboard stats.
-          const allRes = await fetch(`http://localhost:5001/api/reports/user/${user.id}`);
-          if (allRes.ok) {
-            const data = await allRes.json();
-            if (data.length > 0) {
-              const total = data.length;
-              const avg = Math.round(data.reduce((acc: any, r: any) => acc + r.overallScore, 0) / total);
-              const focus = Math.round(data.reduce((acc: any, r: any) => acc + r.postureScore, 0) / total);
-              const rank = avg > 90 ? "Elite" : avg > 75 ? "Advanced" : "Standard";
-              setStats({ total, avgScore: avg, focus, rank });
-            }
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const total = data.length;
+            const avg = Math.round(data.reduce((acc: any, r: any) => acc + (r.overallScore || 0), 0) / total);
+            const focus = Math.round(data.reduce((acc: any, r: any) => acc + (r.postureScore || 0), 0) / total);
+            const rank = avg > 90 ? "Elite" : avg > 75 ? "Advanced" : "Standard";
+            setStats({ total, avgScore: avg, focus, rank });
+            return;
           }
+        }
+        
+        // FALLBACK: If no backend data, check localStorage for current session stats
+        const localResults = JSON.parse(localStorage.getItem("interview_results") || "[]");
+        if (localResults.length > 0) {
+          const avgTech = Math.round(localResults.reduce((acc: any, r: any) => acc + (r.evaluation?.technical_score || r.evaluation?.score || 0), 0) / localResults.length);
+          const avgInt = Math.round(localResults.reduce((acc: any, r: any) => acc + (r.evaluation?.integrity_score || 85), 0) / localResults.length);
+          const rank = avgTech > 90 ? "Elite" : avgTech > 75 ? "Advanced" : "Standard";
+          setStats({ total: 1, avgScore: avgTech, focus: avgInt, rank });
         }
       } catch (err) {
         console.error("Stats fetch error:", err);
@@ -89,15 +92,37 @@ export default function Dashboard() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
-      // Simulate ATS analysis
-      setTimeout(() => {
-        setAtsScore(Math.floor(Math.random() * 20) + 75);
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        console.log("DEBUG: Sending CV to backend...");
+        const res = await fetch('http://localhost:8000/analyze-cv', {
+          method: 'POST',
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log("DEBUG: Received analysis data:", data);
+          if (data.error) {
+            setAtsScore(0);
+            setAtsImprovements([`Error: ${data.error}`, "Please check file format (PDF/DOCX)"]);
+          } else {
+            setAtsScore(data.score);
+            setAtsImprovements(data.improvements || []);
+          }
+        } else {
+          console.error("Server returned error:", res.status);
+          setAtsImprovements(["Connection to analysis server failed."]);
+        }
+      } catch (err) {
+        console.error("CV Analysis error:", err);
+      } finally {
         setIsUploading(false);
-      }, 2500);
+      }
     }
   };
 
@@ -167,11 +192,11 @@ export default function Dashboard() {
           {/* Resources Mosaic */}
           <section className="resources-mosaic">
             <div className="section-header reveal">
-              <h2>Preparation Mosaic</h2>
+              <h2>Preparation Resources</h2>
             </div>
             <div className="mosaic-grid">
               {resources.map((res, i) => (
-                <div key={i} className="mosaic-card glass-card reveal" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
+                <Link to={`/resource/${res.id}`} key={i} className="mosaic-card glass-card reveal" style={{ animationDelay: `${0.3 + i * 0.1}s`, textDecoration: 'none', color: 'inherit' }}>
                   <div className="card-top">
                     <div className="mosaic-icon">{res.icon}</div>
                     <div className="mosaic-tag">{res.tags[0]}</div>
@@ -182,7 +207,7 @@ export default function Dashboard() {
                     <span className="launch-text">Access Module</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
@@ -213,10 +238,14 @@ export default function Dashboard() {
                     <div className="score-value" style={{ fontSize: '1.5rem' }}>{atsScore}%</div>
                   </div>
                   <div className="vector-list" style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Vectors</div>
-                    <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <li style={{ fontSize: '0.75rem', color: 'var(--primary-muted)' }}>▲ Metrics optimization</li>
-                      <li style={{ fontSize: '0.75rem', color: 'var(--primary-muted)' }}>▲ Domain density</li>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>Improvements (AI Analysis)</div>
+                    <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                      {atsImprovements.map((imp, idx) => (
+                        <li key={idx} style={{ fontSize: '0.75rem', color: 'var(--primary-muted)', lineHeight: '1.4' }}>
+                          <span style={{ color: 'var(--accent)', marginRight: '0.5rem' }}>▲</span>
+                          {imp}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -224,22 +253,6 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <div className="sidebar-module glass-card">
-            <h4>Active Evaluations</h4>
-            <div className="eval-list">
-              {questionnaires.map(q => (
-                <div key={q.id} className="eval-item">
-                  <div className="eval-info">
-                    <div className="eval-name">{q.title}</div>
-                    <div className="eval-meta">{q.duration} • Adaptive Level</div>
-                  </div>
-                  <div className="eval-action">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
         </aside>
       </div>

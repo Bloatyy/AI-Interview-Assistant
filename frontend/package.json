@@ -11,9 +11,14 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.6",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@types/three": "^0.184.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.15.0"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.15.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

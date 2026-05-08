@@ -5,9 +5,10 @@ import { useSignIn, useUser } from '@clerk/clerk-react';
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: (user: any) => void;
 }
 
-export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+export default function AuthModal({ isOpen, onClose, onLoginSuccess }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +36,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   // Handle success messages from search params
   useEffect(() => {
     if (searchParams.get('verified') === 'true') {
-      setMessage({ type: 'success', text: 'Email verified successfully! You can now log in.' });
+      setMessage({ type: 'success', text: "You've been verified, please return back to log in." });
       setIsLogin(true);
     }
   }, [searchParams]);
@@ -51,7 +52,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
         redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/',
+        redirectUrlComplete: '/dashboard',
       });
     } catch (err: any) {
       const errorMsg = err.errors?.[0]?.message || '';
@@ -79,6 +80,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const mockUser = { id: 'admin-123', name: 'Admin User', email: 'admin@gmail.com' };
       localStorage.setItem('token', 'mock-token-admin');
       localStorage.setItem('user', JSON.stringify(mockUser));
+      if (onLoginSuccess) onLoginSuccess(mockUser);
       setMessage({ type: 'success', text: 'Admin Login successful!' });
       setTimeout(() => {
         onClose();
@@ -102,8 +104,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       }
 
       if (isLogin) {
+        const userData = { ...data.user };
+        if (userData.email) {
+          userData.name = userData.email.split('@')[0];
+        }
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('user', JSON.stringify(userData));
+        if (onLoginSuccess) onLoginSuccess(userData);
         setMessage({ type: 'success', text: 'Login successful!' });
         setTimeout(() => {
           onClose();
@@ -160,10 +167,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <div style={{ 
           position: 'absolute', 
           inset: 0, 
-          opacity: 0.03, 
+          opacity: 0.01, 
           pointerEvents: 'none',
-          backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")',
-          filter: 'contrast(150%) brightness(1000%)',
+          backgroundColor: '#000',
           zIndex: 0
         }}></div>
 
