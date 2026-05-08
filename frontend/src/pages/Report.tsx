@@ -191,7 +191,16 @@ export default function Report() {
         <div className="video-modal-overlay" onClick={() => setShowPlayer(false)}>
           <div className="video-modal-content premium-player" onClick={e => e.stopPropagation()}>
             <div className="player-header">
-              <h3>Simulation Replay</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button 
+                  onClick={() => setShowPlayer(false)} 
+                  className="btn-secondary" 
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', borderRadius: '8px' }}
+                >
+                  ← Back to Results
+                </button>
+                <h3 style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.9rem' }}>Simulation Replay</h3>
+              </div>
               <button onClick={() => setShowPlayer(false)} className="close-btn">✕</button>
             </div>
             
