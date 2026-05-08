@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useClerk } from '@clerk/clerk-react';
 import AIVirtualInterviewer3D from '../components/AIVirtualInterviewer3D';
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { saveVideo, saveQuestionVideo } from "../utils/db";
+import { saveVideo } from "../utils/db";
 import amazonTechnicalData from "../data/amazon_technical.json";
 
 function shuffleArray(array: any[]) {
@@ -56,15 +56,10 @@ export default function Interview() {
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [preSessionCountdown, setPreSessionCountdown] = useState<number | null>(null);
   const [professionalismData, setProfessionalismData] = useState<any>(null);
-  
-  // Timestamp tracking for granular replay
-  const sessionStartTime = useRef<number>(0);
-  const questionTimestamps = useRef<{start: number, end: number}[]>([]);
 
   // Analyze looks at the start of the interview
   useEffect(() => {
     if (isInterviewStarted && videoRef.current) {
-      sessionStartTime.current = Date.now();
       const videoElement = videoRef.current;
       const analyzeProfessionalism = async () => {
         try {
@@ -113,6 +108,9 @@ export default function Interview() {
   const [allThoughtProcesses, setAllThoughtProcesses] = useState<string[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
   const allResultsRef = useRef<any[]>([]); // Sync ref to avoid React state race conditions
+  
+  const sessionStartTimeRef = useRef<number | null>(null);
+  const questionStartTimeRef = useRef<number | null>(null);
 
   const handleViewReport = () => {
     setIsExiting(true);
@@ -307,6 +305,10 @@ export default function Interview() {
       fullRecorder.ondataavailable = (e) => sessionChunks.current.push(e.data);
       fullRecorder.start();
       setFullSessionRecorder(fullRecorder);
+      
+      // Initialize Timestamps
+      sessionStartTimeRef.current = Date.now();
+      questionStartTimeRef.current = 0; 
     }
   };
 
@@ -315,14 +317,14 @@ export default function Interview() {
 
   const startRecording = () => {
     if (stream) {
-      // Track start timestamp relative to session start
-      const startTimeRelative = (Date.now() - sessionStartTime.current) / 1000;
-      questionTimestamps.current[currentStep] = { start: startTimeRelative, end: 0 };
-      
       recordingQuestionRef.current = questions[currentStep].text;
-      const stepIdx = currentStep;
       
-      // Standard audio/video recorder for evaluation
+      // Track exact start timestamp relative to session beginning
+      if (sessionStartTimeRef.current) {
+        questionStartTimeRef.current = (Date.now() - sessionStartTimeRef.current) / 1000;
+      }
+      
+      // We still record a clip for evaluation (audio), but we don't save it as a separate video for replay
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       const chunks: Blob[] = [];
       
@@ -330,14 +332,12 @@ export default function Interview() {
       recorder.onstop = async () => {
         const videoBlob = new Blob(chunks, { type: 'video/webm' });
         
-        // Track end timestamp
-        const endTimeRelative = (Date.now() - sessionStartTime.current) / 1000;
-        if (questionTimestamps.current[stepIdx]) {
-          questionTimestamps.current[stepIdx].end = endTimeRelative;
-        }
-
-        // Submit for AI evaluation
-        await submitAnswer(videoBlob, recordingQuestionRef.current, questionTimestamps.current[stepIdx]);
+        // Calculate end timestamp
+        const endTime = sessionStartTimeRef.current ? (Date.now() - sessionStartTimeRef.current) / 1000 : 0;
+        const interval = { start: questionStartTimeRef.current || 0, end: endTime };
+        
+        // Submit for AI evaluation, passing the temporal interval for the report
+        await submitAnswer(videoBlob, recordingQuestionRef.current, interval);
         
         if (lastRecordingResolve.current) {
           lastRecordingResolve.current();
@@ -352,15 +352,14 @@ export default function Interview() {
 
   const pendingSubmissions = useRef<Promise<any>[]>([]);
 
-  const submitAnswer = async (audioBlob: Blob, questionText: string, timestamp?: {start: number, end: number}) => {
+  const submitAnswer = async (audioBlob: Blob, questionText: string, interval?: { start: number, end: number }) => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "recorded_audio.webm");
     formData.append("question_text", questionText);
     formData.append("posture", postureStatus);
     formData.append("eye_gaze", eyeGazeStatus);
-    formData.append("face_detected", faceDetected);
+    formData.append("face_detected", faceDetected.toString());
     
-    // Include professionalism data from start of session
     if (professionalismData) {
       formData.append("attire", professionalismData.attire || "Unknown");
       formData.append("grooming", professionalismData.grooming || "Unknown");
@@ -368,35 +367,27 @@ export default function Interview() {
     }
     
     const submissionPromise = (async () => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-
       try {
         const response = await fetch("http://localhost:8000/process-answer", {
           method: "POST",
           body: formData,
-          signal: controller.signal
         });
         
         const data = await response.json();
-        if (data.error) throw new Error(data.error);
         const { transcript, evaluation } = data;
         
-        clearTimeout(timeoutId);
-
         const newResult = {
           question: questionText,
-          timestamp, // STORE TIMESTAMP
           evaluation: {
             ...evaluation,
-            transcript: transcript
+            transcript,
+            interval
           }
         };
-        // Update BOTH the ref (sync, reliable) and state (for UI)
+        
         allResultsRef.current = [...allResultsRef.current, newResult];
         setAllResults([...allResultsRef.current]);
         
-        // Still update localStorage for redundancy
         const existing = JSON.parse(localStorage.getItem("interview_results") || "[]");
         existing.push(newResult);
         localStorage.setItem("interview_results", JSON.stringify(existing));
@@ -414,15 +405,12 @@ export default function Interview() {
             feedback: "Evaluation based on local metrics due to cloud interruption.",
             strengths: ["Communication captured"],
             weaknesses: ["AI audit pending"],
-            transcript: "Transcription unavailable"
+            transcript: "Transcription unavailable",
+            interval
           }
         };
         allResultsRef.current = [...allResultsRef.current, fallbackResult];
         setAllResults([...allResultsRef.current]);
-        
-        const existing = JSON.parse(localStorage.getItem("interview_results") || "[]");
-        existing.push(fallbackResult);
-        localStorage.setItem("interview_results", JSON.stringify(existing));
         return fallbackResult;
       }
     })();

@@ -137,20 +137,46 @@ export default function Report() {
     downloadAnchorNode.remove();
   };
 
-  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
-  const [clipRange, setClipRange] = useState<{start: number, end: number} | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const [activeInterval, setActiveInterval] = useState<{ start: number, end: number } | null>(null);
 
   useEffect(() => {
-    const loadVideo = async () => {
+    const loadSessionVideo = async () => {
       const blob = await getVideo();
       if (blob) {
         setSessionVideoUrl(URL.createObjectURL(blob));
       }
     };
-    loadVideo();
+    loadSessionVideo();
   }, []);
+
+  const playQuestionVideo = (interval: { start: number, end: number }) => {
+    if (sessionVideoUrl) {
+      setActiveVideoUrl(sessionVideoUrl);
+      setActiveInterval(interval);
+    } else {
+      alert("Session video not found. Please ensure recording was successful.");
+    }
+  };
+
+  // Handle timestamp seeking when modal opens
+  useEffect(() => {
+    if (activeVideoUrl && modalVideoRef.current && activeInterval) {
+      modalVideoRef.current.currentTime = activeInterval.start;
+      
+      const handleTimeUpdate = () => {
+        if (modalVideoRef.current && modalVideoRef.current.currentTime >= activeInterval.end) {
+          modalVideoRef.current.pause();
+          modalVideoRef.current.removeEventListener('timeupdate', handleTimeUpdate);
+        }
+      };
+      
+      modalVideoRef.current.addEventListener('timeupdate', handleTimeUpdate);
+      return () => modalVideoRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+    }
+  }, [activeVideoUrl, activeInterval]);
 
   if (isLoading) {
     return (
@@ -163,32 +189,6 @@ export default function Report() {
     );
   }
 
-  const playQuestionVideo = (idx: number) => {
-    const res = results[idx];
-    if (res?.timestamp && sessionVideoUrl) {
-      setClipRange(res.timestamp);
-      setActiveVideoUrl(sessionVideoUrl);
-    } else {
-      alert("No replay timestamp available for this question.");
-    }
-  };
-
-  // Handle seeking and stopping for clips
-  const onVideoTimeUpdate = () => {
-    if (videoRef.current && clipRange) {
-      if (videoRef.current.currentTime >= clipRange.end) {
-        videoRef.current.pause();
-        setClipRange(null);
-      }
-    }
-  };
-
-  const onVideoLoadedMetadata = () => {
-    if (videoRef.current && clipRange) {
-      videoRef.current.currentTime = clipRange.start;
-    }
-  };
-
   return (
     <div className="premium-container page-padding">
       {/* Video Modal Overlay */}
@@ -200,12 +200,10 @@ export default function Report() {
               <button onClick={() => setActiveVideoUrl(null)} className="close-btn">✕</button>
             </div>
             <video 
-              ref={videoRef}
+              ref={modalVideoRef}
               src={activeVideoUrl} 
               autoPlay 
               controls 
-              onTimeUpdate={onVideoTimeUpdate}
-              onLoadedMetadata={onVideoLoadedMetadata}
               style={{ width: '100%', borderRadius: '1rem' }} 
             />
           </div>
@@ -253,12 +251,6 @@ export default function Report() {
         </div>
       </div>
 
-      {videoUrl && (
-        <div className="glass-card no-print" style={{ padding: '2rem', marginBottom: '4rem' }}>
-          <h3 style={{ marginBottom: '1.5rem' }}>Session Replay</h3>
-          <video src={videoUrl} controls style={{ width: '100%', borderRadius: '1rem', background: '#000' }} />
-        </div>
-      )}
 
       {/* === 4 METRIC CARDS === */}
       <div className="score-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
@@ -376,7 +368,7 @@ export default function Report() {
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <button 
-                      onClick={() => playQuestionVideo(idx)}
+                      onClick={() => res.evaluation?.interval ? playQuestionVideo(res.evaluation.interval) : alert("Replay data unavailable for this question.")}
                       className="btn-secondary"
                       style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
