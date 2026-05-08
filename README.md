@@ -1,159 +1,152 @@
-🤖 Your AI-Powered Interview Coach. Built to Make You Unstoppable.
+# 🤖 AI Interview Assistant
 
-Unsupported image
-Unsupported image
-Unsupported image
-Unsupported image
-Unsupported image
-Unsupported image
+> **Stop fumbling through interviews. Start owning them.**
 
-    "Stop fumbling through interviews. Start owning them."
+An AI-powered interview prep platform that puts a brutally honest, infinitely patient coach in your corner — 24/7. Simulate real interviews, get instant structured feedback, and track your growth until you're dangerous.
 
-⚡ What Is This?
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/Node.js-24+-green.svg)](https://nodejs.org/)
 
-AI Interview Assistant is a next-generation interview prep platform that puts an AI in your corner — 24/7, brutally honest, and infinitely patient. No more awkward silences. No more blanking on behavioral questions. No more leaving an interview thinking "I had the perfect answer five minutes after I left."
+---
 
-This tool simulates real interview scenarios, tears apart your answers, rebuilds them stronger, and tracks your growth over time — all powered by AI that actually understands what interviewers are looking for.
-🔥 Features (the heat)
+## ✨ Features
 
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   🎙️  Real-time mock interviews with live AI feedback       │
-│   🧠  Role-specific question banks (SWE, PM, Design...)     │
-│   📊  Performance analytics — see where you're weak        │
-│   🔁  Answer refinement loop — iterate until perfect        │
-│   📝  STAR method enforcer — structure your stories         │
-│   🎯  Difficulty scaling — junior to staff-level            │
-│   🏢  Company-specific prep (FAANG, startups, agencies)     │
-│   🔍  Resume parsing + tailored question generation         │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+- 🎙️ **Real-time mock interviews** with live AI feedback
+- 🧠 **Role-specific question banks** — SWE, PM, Design, and more
+- 📊 **Performance analytics** — pinpoint exactly where you're weak
+- 🔁 **Answer refinement loop** — iterate until your answers are airtight
+- 📝 **STAR method enforcer** — structure your stories like a pro
+- 🎯 **Difficulty scaling** — junior to staff-level
+- 🏢 **Company-specific prep** — FAANG, startups, agencies
+- 🔍 **Resume parsing** — upload your resume, get tailored questions
 
-🏗️ Architecture
+---
 
-This isn't a hobby project duct-taped together. This is a production-grade monorepo built with the stack that scales.
+## 🏗️ Project Structure
 
-ai-interview-assistant/
-├── 🖥️  artifacts/
-│   ├── api-server/          ← Express 5 backend (Node 24, lightning fast)
-│   └── mockup-sandbox/      ← Component preview + design system
-│
-├── 📦  lib/
-│   ├── api-spec/            ← OpenAPI 3.1 — single source of truth
-│   ├── api-client-react/    ← Auto-generated React Query hooks (via Orval)
-│   ├── api-zod/             ← Auto-generated Zod schemas
-│   └── db/                  ← Drizzle ORM schema + migrations
-│
-└── 🔧  scripts/             ← Utility tooling
+```
+AI-Interview-Assistant/
+├── backend/          ← Express 5 API server (Node 24, TypeScript)
+├── frontend/         ← React + Vite UI (Tailwind CSS + shadcn/ui)
+└── ml/               ← Python ML models & scoring logic
+```
 
-The Stack That Hits Different
-Layer	Technology	Why
-Runtime	Node.js 24	Latest. Fastest. No compromises.
-Language	TypeScript 5.9	Strict. Type-safe. Ship with confidence.
-API Framework	Express 5	Battle-tested, now with async/await native
-Database	PostgreSQL + Drizzle ORM	Relational power, TypeScript-first queries
-Validation	Zod v4	Runtime safety at every boundary
-API Contract	OpenAPI 3.1 + Orval	Contract-first. Frontend never guesses.
-Frontend	React + Vite	HMR so fast you'll think it's broken
-Styling	Tailwind CSS + shadcn/ui	Design system out of the box
-Package Manager	pnpm workspaces	Monorepo, done right
-🚀 Getting Started
-Prerequisites
+---
 
-    Node.js 24+
-    pnpm 9+
-    PostgreSQL (local or hosted)
+## 🛠️ Tech Stack
 
-Installation
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 24 |
+| Language | TypeScript 5.9 / Python |
+| API Framework | Express 5 |
+| Frontend | React + Vite |
+| Styling | Tailwind CSS + shadcn/ui |
+| ML / Scoring | Python |
 
-# Clone the beast
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 24+
+- pnpm 9+
+- Python 3.10+
+- PostgreSQL (local or hosted)
+
+### Installation
+
+```bash
+# Clone the repo
 git clone https://github.com/Bloatyy/AI-Interview-Assistant.git
 cd AI-Interview-Assistant
-# Install all workspace dependencies
-pnpm install
-# Set your environment variables
+
+# Install frontend & backend dependencies
+cd frontend && npm install
+cd ../backend && npm install
+
+# Set up environment variables
 cp .env.example .env
-# Fill in DATABASE_URL, OPENAI_API_KEY, SESSION_SECRET
+# Fill in: DATABASE_URL, OPENAI_API_KEY, SESSION_SECRET
 
-Running It
+# Install Python dependencies (for ML)
+cd ../ml && pip install -r requirements.txt
+```
 
-# Start the API server (port 5000)
-pnpm --filter @workspace/api-server run dev
-# Start the frontend
-pnpm --filter @workspace/web run dev
-# Regenerate API hooks after spec changes
-pnpm --filter @workspace/api-spec run codegen
-# Push DB schema changes (dev only)
-pnpm --filter @workspace/db run push
+### Running Locally
 
-Health Check
+```bash
+# Start the backend (port 5000)
+cd backend && npm run dev
 
+# Start the frontend (separate terminal)
+cd frontend && npm run dev
+```
+
+### Health Check
+
+```bash
 curl http://localhost:5000/api/healthz
-# → {"status":"ok"}  ✓
+# → {"status":"ok"}
+```
 
-🧬 How It Works
+---
 
-You → Upload Resume + Target Role
-         ↓
-AI parses your background and maps it to the role requirements
-         ↓
-Interview session begins — behavioral, technical, or both
-         ↓
-You answer (text or voice)
-         ↓
-AI scores: Clarity · Specificity · STAR adherence · Confidence signals
-         ↓
-Instant feedback + example of a stronger answer
-         ↓
-Repeat until you're dangerous
-         ↓
+## 🧬 How It Works
+
+```
+Upload Resume + Target Role
+        ↓
+AI maps your background to the role
+        ↓
+Interview session begins (behavioral, technical, or both)
+        ↓
+You answer
+        ↓
+AI scores: Clarity · Specificity · STAR adherence · Confidence
+        ↓
+Instant feedback + a stronger example answer
+        ↓
+Repeat until you're ready
+        ↓
 Performance report — know exactly what to drill
+```
 
-📡 API Design
+---
 
-The API is contract-first. The OpenAPI spec lives in lib/api-spec/openapi.yaml and is the single source of truth. React Query hooks and Zod validation schemas are auto-generated — no handwritten client code, no drift between frontend and backend.
+## 📡 API Endpoints
 
-Key endpoints (coming hot):
+```
+POST   /api/sessions              ← Start a new interview session
+GET    /api/sessions/:id          ← Retrieve session + transcript
+POST   /api/sessions/:id/answer   ← Submit an answer, get AI feedback
+GET    /api/questions             ← Fetch role-specific question bank
+GET    /api/reports/:userId       ← Performance analytics over time
+POST   /api/resume/parse          ← Parse resume, extract experience signals
+```
 
-POST /api/sessions          ← Start a new interview session
-GET  /api/sessions/:id      ← Retrieve session + transcript
-POST /api/sessions/:id/answer ← Submit an answer, get AI feedback
-GET  /api/questions         ← Fetch role-specific question bank
-GET  /api/reports/:userId   ← Performance analytics over time
-POST /api/resume/parse      ← Parse resume, extract experience signals
+---
 
-🗄️ Database Schema
+## 🤝 Contributing
 
-Built on PostgreSQL with Drizzle ORM — fully type-safe, migration-tracked, zero-handwritten-SQL required.
+PRs are welcome. If you have an idea that makes interviews less painful — open an issue or ship a PR.
 
-users ──────────────── sessions ──────────── answers
-  │                        │                    │
-  └─── resumes             └─── questions       └─── feedback_scores
+1. Fork the repo
+2. Create your branch: `git checkout -b feat/my-feature`
+3. Commit: `git commit -m "feat: add my feature"`
+4. Push: `git push origin feat/my-feature`
+5. Open a pull request
 
-🛠️ Developer Commands
+---
 
-pnpm run typecheck          # Full typecheck across all packages
-pnpm run build              # Typecheck + build everything
-pnpm run typecheck:libs     # Composite libs only (fast)
-pnpm --filter @workspace/api-spec run codegen   # Regenerate API hooks
-pnpm --filter @workspace/db run push            # Push schema to DB
+## 📜 License
 
-🤝 Contributing
+[MIT](LICENSE) — take it, use it, build on it.
 
-This project is actively in development and PRs are welcome. If you have an idea that makes interviews less painful for people everywhere — open an issue or drop a PR.
+---
 
-    Fork it
-    Create your feature branch: git checkout -b feat/my-killer-feature
-    Commit: git commit -m "feat: add killer feature"
-    Push: git push origin feat/my-killer-feature
-    Open a PR and describe what you built
-
-📜 License
-
-MIT — take it, use it, build on it.
-
-Built with ☕ and a deep hatred for bad interviews.
-
-No more "tell me about yourself" panic. No more blanking on system design. No more leaving the room knowing you had the answer five minutes too late.
-
-Get ready. Get sharp. Get hired.
+> Built with ☕ and a deep hatred for bad interviews.  
+> No more "tell me about yourself" panic. No more blanking on system design.  
+> **Get ready. Get sharp. Get hired.**
