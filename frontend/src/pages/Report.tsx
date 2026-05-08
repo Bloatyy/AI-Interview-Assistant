@@ -231,7 +231,6 @@ export default function Report() {
           </div>
         </div>
       )}
- )}
       <div className="neural-mesh"></div>
       <div className="bg-glow"></div>
 
