@@ -210,7 +210,7 @@ export default function Report() {
                 src={sessionVideoUrl} 
                 onTimeUpdate={handleTimeUpdate}
                 onClick={togglePlay}
-                style={{ width: '100%', borderRadius: '0.8rem' }} 
+                style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '0.8rem' }} 
               />
               
               {/* Custom Controls HUD */}
@@ -581,18 +581,21 @@ export default function Report() {
         }
 
         .premium-player {
-          width: 100%;
-          max-width: 960px;
+          width: 80vw;
+          max-width: 1400px;
+          height: 80vh;
           background: #0a0a0a;
           border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 1.5rem;
+          border-radius: 2rem;
           overflow: hidden;
-          box-shadow: 0 30px 100px rgba(0,0,0,0.9);
+          box-shadow: 0 40px 120px rgba(0,0,0,1);
           position: relative;
+          display: flex;
+          flex-direction: column;
         }
 
         .player-header {
-          padding: 1.2rem 2rem;
+          padding: 1.5rem 3rem;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -611,14 +614,19 @@ export default function Report() {
         .video-container {
           position: relative;
           background: #000;
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
         }
 
         .player-controls {
           position: absolute;
-          bottom: 1.5rem;
-          left: 1.5rem;
-          right: 1.5rem;
-          background: rgba(0,0,0,0.4);
+          bottom: 2.5rem;
+          left: 3rem;
+          right: 3rem;
+          background: rgba(0,0,0,0.6);
           backdrop-filter: blur(20px);
           padding: 0.8rem 1.5rem;
           border-radius: 12px;
