@@ -134,12 +134,11 @@ export default function Report() {
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
-  };
-
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  };  const [showPlayer, setShowPlayer] = useState(false);
   const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
-  const modalVideoRef = useRef<HTMLVideoElement>(null);
-  const [activeInterval, setActiveInterval] = useState<{ start: number, end: number } | null>(null);
+  const playerVideoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const loadSessionVideo = async () => {
@@ -151,31 +150,28 @@ export default function Report() {
     loadSessionVideo();
   }, []);
 
-  const playQuestionVideo = (interval: { start: number, end: number }) => {
-    if (sessionVideoUrl) {
-      setActiveVideoUrl(sessionVideoUrl);
-      setActiveInterval(interval);
-    } else {
-      alert("Session video not found. Please ensure recording was successful.");
+  const togglePlay = () => {
+    if (playerVideoRef.current) {
+      if (isPlaying) playerVideoRef.current.pause();
+      else playerVideoRef.current.play();
+      setIsPlaying(!isPlaying);
     }
   };
 
-  // Handle timestamp seeking when modal opens
-  useEffect(() => {
-    if (activeVideoUrl && modalVideoRef.current && activeInterval) {
-      modalVideoRef.current.currentTime = activeInterval.start;
-      
-      const handleTimeUpdate = () => {
-        if (modalVideoRef.current && modalVideoRef.current.currentTime >= activeInterval.end) {
-          modalVideoRef.current.pause();
-          modalVideoRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-        }
-      };
-      
-      modalVideoRef.current.addEventListener('timeupdate', handleTimeUpdate);
-      return () => modalVideoRef.current?.removeEventListener('timeupdate', handleTimeUpdate);
+  const handleTimeUpdate = () => {
+    if (playerVideoRef.current) {
+      const p = (playerVideoRef.current.currentTime / playerVideoRef.current.duration) * 100;
+      setProgress(p);
     }
-  }, [activeVideoUrl, activeInterval]);
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (playerVideoRef.current) {
+      const time = (parseFloat(e.target.value) / 100) * playerVideoRef.current.duration;
+      playerVideoRef.current.currentTime = time;
+      setProgress(parseFloat(e.target.value));
+    }
+  };
 
   if (isLoading) {
     return (
@@ -190,24 +186,52 @@ export default function Report() {
 
   return (
     <div className="premium-container page-padding">
-      {/* Video Modal Overlay */}
-      {activeVideoUrl && (
-        <div className="video-modal-overlay" onClick={() => setActiveVideoUrl(null)}>
-          <div className="video-modal-content" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 style={{ margin: 0 }}>Answer Replay</h3>
-              <button onClick={() => setActiveVideoUrl(null)} className="close-btn">✕</button>
+      {/* Premium Custom Video Player Modal */}
+      {showPlayer && sessionVideoUrl && (
+        <div className="video-modal-overlay" onClick={() => setShowPlayer(false)}>
+          <div className="video-modal-content premium-player" onClick={e => e.stopPropagation()}>
+            <div className="player-header">
+              <h3>Simulation Replay</h3>
+              <button onClick={() => setShowPlayer(false)} className="close-btn">✕</button>
             </div>
-            <video 
-              ref={modalVideoRef}
-              src={activeVideoUrl} 
-              autoPlay 
-              controls 
-              style={{ width: '100%', borderRadius: '1rem' }} 
-            />
+            
+            <div className="video-container">
+              <video 
+                ref={playerVideoRef}
+                src={sessionVideoUrl} 
+                onTimeUpdate={handleTimeUpdate}
+                onClick={togglePlay}
+                style={{ width: '100%', borderRadius: '0.8rem' }} 
+              />
+              
+              {/* Custom Controls HUD */}
+              <div className="player-controls">
+                <button onClick={togglePlay} className="play-btn">
+                  {isPlaying ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  )}
+                </button>
+                
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={progress} 
+                  onChange={handleSeek}
+                  className="seek-bar"
+                />
+                
+                <div className="time-display">
+                  {playerVideoRef.current ? Math.floor(playerVideoRef.current.currentTime) : 0}s / {playerVideoRef.current ? Math.floor(playerVideoRef.current.duration) : 0}s
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
+ )}
       <div className="neural-mesh"></div>
       <div className="bg-glow"></div>
 
@@ -232,6 +256,22 @@ export default function Report() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <button 
+              onClick={() => setShowPlayer(true)}
+              className="btn-primary no-print" 
+              style={{ 
+                padding: '0.8rem 2rem', 
+                width: '200px', 
+                background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.6rem'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Watch Session
+            </button>
             <button 
               onClick={() => window.print()} 
               className="btn-secondary no-print" 
@@ -366,14 +406,6 @@ export default function Report() {
                     <h3 style={{ marginTop: '0.5rem' }}>{res.question}</h3>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <button 
-                      onClick={() => res.evaluation?.interval ? playQuestionVideo(res.evaluation.interval) : alert("Replay data unavailable for this question.")}
-                      className="btn-secondary"
-                      style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                      Replay Answer
-                    </button>
                     <div className="score-badge" style={{ padding: '0.5rem 1rem', borderRadius: '4px', border: `1px solid ${getScoreColor(res.evaluation?.score || 0)}`, color: getScoreColor(res.evaluation?.score || 0), fontWeight: 700, fontSize: '1.1rem' }}>
                       {res.evaluation?.score || 0}%
                     </div>
@@ -531,8 +563,8 @@ export default function Report() {
         .video-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.8);
-          backdrop-filter: blur(10px);
+          background: rgba(0,0,0,0.9);
+          backdrop-filter: blur(15px);
           z-index: 10000;
           display: flex;
           align-items: center;
@@ -540,23 +572,118 @@ export default function Report() {
           padding: 2rem;
         }
 
-        .video-modal-content {
+        .premium-player {
           width: 100%;
-          max-width: 800px;
+          max-width: 960px;
           background: #0a0a0a;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 1.5rem;
-          padding: 1.5rem;
+          overflow: hidden;
+          box-shadow: 0 30px 100px rgba(0,0,0,0.9);
           position: relative;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .player-header {
+          padding: 1.2rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255,255,255,0.02);
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .player-header h3 {
+          margin: 0;
+          font-size: 1rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: var(--text-secondary);
+        }
+
+        .video-container {
+          position: relative;
+          background: #000;
+        }
+
+        .player-controls {
+          position: absolute;
+          bottom: 1.5rem;
+          left: 1.5rem;
+          right: 1.5rem;
+          background: rgba(0,0,0,0.4);
+          backdrop-filter: blur(20px);
+          padding: 0.8rem 1.5rem;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          opacity: 0;
+          transform: translateY(10px);
+          transition: all 0.3s ease;
+        }
+
+        .video-container:hover .player-controls {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .play-btn {
+          background: var(--accent);
+          border: none;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: 0.2s;
+        }
+
+        .play-btn:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .seek-bar {
+          flex: 1;
+          height: 4px;
+          -webkit-appearance: none;
+          background: rgba(255,255,255,0.2);
+          border-radius: 2px;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .seek-bar::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 12px;
+          height: 12px;
+          background: white;
+          border-radius: 50%;
+          transition: 0.2s;
+        }
+
+        .seek-bar:hover::-webkit-slider-thumb {
+          transform: scale(1.3);
+          box-shadow: 0 0 10px rgba(255,255,255,0.8);
+        }
+
+        .time-display {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.75rem;
+          color: white;
+          min-width: 90px;
+          text-align: right;
         }
 
         .close-btn {
           background: rgba(255,255,255,0.05);
           border: 1px solid rgba(255,255,255,0.1);
           color: white;
-          width: 30px;
-          height: 30px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           cursor: pointer;
           display: flex;
