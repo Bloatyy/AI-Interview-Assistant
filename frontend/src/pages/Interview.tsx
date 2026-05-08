@@ -56,10 +56,15 @@ export default function Interview() {
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
   const [preSessionCountdown, setPreSessionCountdown] = useState<number | null>(null);
   const [professionalismData, setProfessionalismData] = useState<any>(null);
+  
+  // Timestamp tracking for granular replay
+  const sessionStartTime = useRef<number>(0);
+  const questionTimestamps = useRef<{start: number, end: number}[]>([]);
 
   // Analyze looks at the start of the interview
   useEffect(() => {
     if (isInterviewStarted && videoRef.current) {
+      sessionStartTime.current = Date.now();
       const videoElement = videoRef.current;
       const analyzeProfessionalism = async () => {
         try {
@@ -310,10 +315,14 @@ export default function Interview() {
 
   const startRecording = () => {
     if (stream) {
+      // Track start timestamp relative to session start
+      const startTimeRelative = (Date.now() - sessionStartTime.current) / 1000;
+      questionTimestamps.current[currentStep] = { start: startTimeRelative, end: 0 };
+      
       recordingQuestionRef.current = questions[currentStep].text;
       const stepIdx = currentStep;
       
-      // Capture VIDEO for per-question replay
+      // Standard audio/video recorder for evaluation
       const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
       const chunks: Blob[] = [];
       
@@ -321,12 +330,14 @@ export default function Interview() {
       recorder.onstop = async () => {
         const videoBlob = new Blob(chunks, { type: 'video/webm' });
         
-        // Store for question-wise replay in Report
-        console.log(`Saving question video for index ${stepIdx}`);
-        await saveQuestionVideo(stepIdx, videoBlob);
-        
+        // Track end timestamp
+        const endTimeRelative = (Date.now() - sessionStartTime.current) / 1000;
+        if (questionTimestamps.current[stepIdx]) {
+          questionTimestamps.current[stepIdx].end = endTimeRelative;
+        }
+
         // Submit for AI evaluation
-        await submitAnswer(videoBlob, recordingQuestionRef.current);
+        await submitAnswer(videoBlob, recordingQuestionRef.current, questionTimestamps.current[stepIdx]);
         
         if (lastRecordingResolve.current) {
           lastRecordingResolve.current();
@@ -341,7 +352,7 @@ export default function Interview() {
 
   const pendingSubmissions = useRef<Promise<any>[]>([]);
 
-  const submitAnswer = async (audioBlob: Blob, questionText: string) => {
+  const submitAnswer = async (audioBlob: Blob, questionText: string, timestamp?: {start: number, end: number}) => {
     const formData = new FormData();
     formData.append("audio", audioBlob, "recorded_audio.webm");
     formData.append("question_text", questionText);
@@ -375,6 +386,7 @@ export default function Interview() {
 
         const newResult = {
           question: questionText,
+          timestamp, // STORE TIMESTAMP
           evaluation: {
             ...evaluation,
             transcript: transcript

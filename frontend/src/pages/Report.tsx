@@ -137,7 +137,20 @@ export default function Report() {
     downloadAnchorNode.remove();
   };
 
+  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [clipRange, setClipRange] = useState<{start: number, end: number} | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const loadVideo = async () => {
+      const blob = await getVideo();
+      if (blob) {
+        setSessionVideoUrl(URL.createObjectURL(blob));
+      }
+    };
+    loadVideo();
+  }, []);
 
   if (isLoading) {
     return (
@@ -150,17 +163,29 @@ export default function Report() {
     );
   }
 
-  const playQuestionVideo = async (idx: number) => {
-    try {
-      const blob = await getQuestionVideo(idx);
-      if (blob) {
-        const url = URL.createObjectURL(blob);
-        setActiveVideoUrl(url);
-      } else {
-        alert("Video clip not found for this question.");
+  const playQuestionVideo = (idx: number) => {
+    const res = results[idx];
+    if (res?.timestamp && sessionVideoUrl) {
+      setClipRange(res.timestamp);
+      setActiveVideoUrl(sessionVideoUrl);
+    } else {
+      alert("No replay timestamp available for this question.");
+    }
+  };
+
+  // Handle seeking and stopping for clips
+  const onVideoTimeUpdate = () => {
+    if (videoRef.current && clipRange) {
+      if (videoRef.current.currentTime >= clipRange.end) {
+        videoRef.current.pause();
+        setClipRange(null);
       }
-    } catch (err) {
-      console.error("Error playing question video:", err);
+    }
+  };
+
+  const onVideoLoadedMetadata = () => {
+    if (videoRef.current && clipRange) {
+      videoRef.current.currentTime = clipRange.start;
     }
   };
 
@@ -174,7 +199,15 @@ export default function Report() {
               <h3 style={{ margin: 0 }}>Answer Replay</h3>
               <button onClick={() => setActiveVideoUrl(null)} className="close-btn">✕</button>
             </div>
-            <video src={activeVideoUrl} autoPlay controls style={{ width: '100%', borderRadius: '1rem' }} />
+            <video 
+              ref={videoRef}
+              src={activeVideoUrl} 
+              autoPlay 
+              controls 
+              onTimeUpdate={onVideoTimeUpdate}
+              onLoadedMetadata={onVideoLoadedMetadata}
+              style={{ width: '100%', borderRadius: '1rem' }} 
+            />
           </div>
         </div>
       )}
