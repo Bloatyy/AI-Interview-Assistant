@@ -274,8 +274,8 @@ export default function Dashboard() {
           background-image: url('../../../brain/79c043ce-2da4-4244-8eca-b950d18dc9e8/nano_banana_background_1778220464103.png');
           background-size: cover;
           background-position: center;
-          opacity: 0.35;
-          filter: blur(15px);
+          opacity: 0.7;
+          filter: brightness(1.3);
           z-index: -2;
           pointer-events: none;
         }
