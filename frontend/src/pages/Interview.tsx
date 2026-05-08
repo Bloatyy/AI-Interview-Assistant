@@ -59,7 +59,8 @@ export default function Interview() {
 
   // Analyze looks at the start of the interview
   useEffect(() => {
-    if (isInterviewStarted && videoElement) {
+    if (isInterviewStarted && videoRef.current) {
+      const videoElement = videoRef.current;
       const analyzeProfessionalism = async () => {
         try {
           const canvas = document.createElement("canvas");
@@ -551,22 +552,15 @@ export default function Interview() {
   const handleNext = async () => {
     const isLastQuestion = currentStep >= questions.length - 1;
 
-    // For HR: Stop recording and wait for the onstop handler to fire + submit
+    // Wait for recording to stop and save for EVERY question (ensures video clip persistence)
     if (mediaRecorder && mediaRecorder.state === "recording") {
-      if (isLastQuestion && protocol !== 'technical') {
-        // CRITICAL: Wait for the last recording's onstop to fire and submit
-        const lastRecordingPromise = new Promise<void>((resolve) => {
-          lastRecordingResolve.current = resolve;
-        });
-        mediaRecorder.stop();
-        setIsRecording(false);
-        console.log("Waiting for last recording to be submitted...");
-        await lastRecordingPromise;
-        console.log("Last recording submitted!");
-      } else {
-        mediaRecorder.stop();
-        setIsRecording(false);
-      }
+      const recordingPromise = new Promise<void>((resolve) => {
+        lastRecordingResolve.current = resolve;
+      });
+      mediaRecorder.stop();
+      setIsRecording(false);
+      console.log(`Finalizing recording for question ${currentStep}...`);
+      await recordingPromise;
     }
 
     const updatedThoughtProcesses = [...allThoughtProcesses, thoughtProcess];
