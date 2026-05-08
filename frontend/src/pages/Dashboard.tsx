@@ -258,9 +258,11 @@ export default function Dashboard() {
       </div>
 
       <style>{`
-        .dashboard-wrapper {
-          position: relative;
+        .premium-container {
+          background: #f8fafc;
+          color: #1e293b;
           min-height: 100vh;
+          position: relative;
           overflow-x: hidden;
         }
 
@@ -271,11 +273,10 @@ export default function Dashboard() {
           left: 0;
           right: 0;
           bottom: 0;
-          background-image: url('../../../brain/79c043ce-2da4-4244-8eca-b950d18dc9e8/nano_banana_background_1778220464103.png');
+          background-image: url('../../../brain/79c043ce-2da4-4244-8eca-b950d18dc9e8/light_premium_tech_background_1778220671065.png');
           background-size: cover;
           background-position: center;
-          opacity: 0.7;
-          filter: brightness(1.3);
+          opacity: 0.8;
           z-index: -2;
           pointer-events: none;
         }
@@ -287,7 +288,7 @@ export default function Dashboard() {
           width: 100%;
           height: 100%;
           background-image: 
-            radial-gradient(circle at 2px 2px, rgba(255,184,0,0.03) 1px, transparent 0);
+            radial-gradient(circle at 2px 2px, rgba(99, 102, 241, 0.05) 1px, transparent 0);
           background-size: 40px 40px;
           pointer-events: none;
           z-index: -1;
@@ -298,52 +299,22 @@ export default function Dashboard() {
           margin-bottom: 5rem;
         }
 
-        .status-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.5rem 1.25rem;
-          background: rgba(255,184,0,0.05);
-          border: 1px solid rgba(255,184,0,0.1);
-          border-radius: 100px;
-          font-size: 0.7rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.15em;
-          color: var(--accent);
-          margin-bottom: 2rem;
-        }
-
-        .pulse-dot {
-          width: 6px;
-          height: 6px;
-          background: var(--accent);
-          border-radius: 50%;
-          box-shadow: 0 0 10px var(--accent);
-          animation: pulse-glow 2s infinite;
-        }
-
-        @keyframes pulse-glow {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.5); opacity: 0.4; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-
         .hero-title {
           font-size: 4.5rem;
           line-height: 0.9;
           margin-bottom: 1.5rem;
+          color: #0f172a;
         }
 
         .hero-subtitle {
           font-size: 1.1rem;
-          color: var(--primary-muted);
+          color: #475569;
           max-width: 600px;
           margin: 0 auto;
         }
 
         .highlight {
-          color: white;
+          color: var(--accent);
           font-weight: 700;
         }
 
@@ -360,355 +331,84 @@ export default function Dashboard() {
           gap: 3rem;
         }
 
-        /* ATS Module */
-        .ats-module {
-          padding: 4rem;
-          background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
-          border: 1px solid var(--border);
-        }
-
-        .module-header {
-          margin-bottom: 3rem;
-        }
-
-        .module-title {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .module-subtitle {
-          color: var(--primary-muted);
-          font-size: 0.9rem;
-        }
-
-        .ats-core-layout {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 3rem;
-          transition: all 0.5s ease;
-        }
-
-        .ats-core-layout.has-results {
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .upload-zone {
-          position: relative;
-          padding: 2.5rem 1rem;
-          border: 1px solid var(--border);
-          border-radius: 1.5rem;
-          text-align: center;
-          cursor: pointer;
-          background: rgba(255,255,255,0.01);
-          transition: var(--transition);
-        }
-
-        .upload-zone:hover {
-          background: rgba(255,184,0,0.03);
-          border: 1px solid var(--accent);
-          box-shadow: 0 0 20px rgba(255,184,0,0.1);
-        }
-
-        .icon-wrapper {
-          width: 64px;
-          height: 64px;
-          margin: 0 auto 1.5rem;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid var(--border);
-          border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--accent);
-        }
-
-        .ats-results-view {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-          justify-content: center;
-        }
-
-        .score-circle-wrapper {
-          position: relative;
-          width: 140px;
-          height: 140px;
-          margin: 0 auto;
-        }
-
-        .score-svg {
-          width: 100%;
-          height: 100%;
-          transform: rotate(-90deg);
-        }
-
-        .score-svg circle {
-          fill: none;
-          stroke-width: 8;
-          stroke-linecap: round;
-        }
-
-        .score-svg .track {
-          stroke: var(--border);
-        }
-
-        .score-svg .progress {
-          stroke: var(--accent);
-          stroke-dasharray: 283;
-          transition: stroke-dashoffset 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .score-value {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2.2rem;
-          font-weight: 800;
-          font-family: var(--font-display);
-        }
-
-        .vector-list {
-          list-style: none;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .vector-list li {
-          display: flex;
-          gap: 1rem;
-          font-size: 0.85rem;
-          color: var(--primary-muted);
-        }
-
-        .vector-list li span {
-          color: var(--accent);
-          font-weight: 800;
-        }
-
-        /* Mosaic Grid */
-        .mosaic-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
-        }
-
-        .mosaic-card {
-          padding: 2.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          transition: var(--transition);
+        /* Glass Cards for Light Mode */
+        .glass-card {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+          color: #1e293b;
         }
 
         .mosaic-card:hover {
           transform: translateY(-8px);
           border-color: var(--accent);
-          background: rgba(255,184,0,0.02);
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.05);
         }
 
-        .mosaic-card h3 {
-          font-size: 1.25rem;
-          line-height: 1.2;
+        .module-title {
+          color: #0f172a;
         }
 
-        .mosaic-card p {
-          font-size: 0.85rem;
-          color: var(--primary-muted);
-          line-height: 1.6;
-        }
-
-        .card-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .mosaic-icon {
-          color: var(--accent);
-        }
-
-        .mosaic-tag {
-          font-size: 0.6rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          padding: 0.25rem 0.75rem;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          color: var(--primary-muted);
-        }
-
-        .card-footer {
-          margin-top: auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: var(--accent);
-          opacity: 0;
-          transform: translateX(-10px);
-          transition: var(--transition);
-        }
-
-        .mosaic-card:hover .card-footer {
-          opacity: 1;
-          transform: translateX(0);
-        }
-
-        /* Tactical Sidebar */
-        .tactical-sidebar {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
-        }
-
-        .sidebar-module {
-          padding: 2.5rem;
-        }
-
-        .sidebar-module h4 {
-          font-size: 0.7rem;
-          text-transform: uppercase;
-          letter-spacing: 0.2em;
-          color: var(--primary-muted);
-          margin-bottom: 2rem;
-        }
-
-        .mission-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-bottom: 2rem;
+        .module-subtitle {
+          color: #64748b;
         }
 
         .mission-item {
-          padding: 1.25rem;
-          background: rgba(255,255,255,0.02);
-          border-radius: 1rem;
-          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(0,0,0,0.05);
         }
 
         .mission-item .label {
-          font-size: 0.65rem;
-          color: var(--primary-muted);
-          margin-bottom: 0.5rem;
+          color: #64748b;
         }
 
         .mission-item .value {
-          font-size: 1.5rem;
-          font-weight: 800;
+          color: #0f172a;
         }
 
-        .tactical-btn {
-          width: 100%;
-          padding: 1.25rem;
-          display: flex;
-          justify-content: center;
-          gap: 1rem;
-          font-size: 0.9rem;
+        .mosaic-card p {
+          color: #64748b;
         }
 
-        .eval-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
+        .mosaic-tag {
+          background: rgba(0,0,0,0.03);
+          color: #64748b;
         }
 
-        .eval-item {
-          padding: 1.25rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          border-radius: 1rem;
-          transition: var(--transition);
-          cursor: pointer;
-          border: 1px solid transparent;
+        .ats-module {
+          background: rgba(255, 255, 255, 0.8);
         }
 
-        .eval-item:hover {
-          background: rgba(255,255,255,0.02);
-          border-color: var(--border);
+        .upload-zone {
+          background: rgba(0,0,0,0.01);
+          border: 1px dashed rgba(0,0,0,0.1);
         }
 
-        .eval-name {
-          font-size: 0.9rem;
-          font-weight: 600;
-          margin-bottom: 0.25rem;
+        .upload-zone:hover {
+          background: rgba(99, 102, 241, 0.03);
+          border-color: var(--accent);
         }
 
-        .eval-meta {
-          font-size: 0.7rem;
-          color: var(--primary-muted);
-        }
-
-        .eval-action {
-          color: var(--accent);
-          opacity: 0;
-          transform: translateX(-5px);
-          transition: var(--transition);
-        }
-
-        .eval-item:hover .eval-action {
-          opacity: 1;
-          transform: translateX(0);
-        }
-
-        .progress-stack {
-          display: flex;
-          flex-direction: column;
-          gap: 2rem;
+        .score-svg .track {
+          stroke: rgba(0,0,0,0.05);
         }
 
         .progress-entry .entry-header {
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.8rem;
-          margin-bottom: 0.75rem;
+          color: #1e293b;
         }
 
         .bar-bg {
-          height: 4px;
-          background: var(--border);
-          border-radius: 10px;
-          overflow: hidden;
-        }
-
-        .bar-fill {
-          height: 100%;
-          background: var(--accent);
-          border-radius: 10px;
-        }
-
-        .reveal-up {
-          animation: reveal-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes reveal-up {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
+          background: rgba(0,0,0,0.05);
         }
 
         @media (max-width: 1400px) {
           .dashboard-layout {
             grid-template-columns: 1fr;
           }
-          .tactical-sidebar {
-            order: -1;
-          }
           .hero-title {
             font-size: 3.5rem;
-          }
-        }
-
-        @media (max-width: 900px) {
-          .mosaic-grid {
-            grid-template-columns: 1fr;
           }
         }
       `}</style>
