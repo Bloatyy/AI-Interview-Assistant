@@ -52,6 +52,15 @@ function App() {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
 
   useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
     if (isClerkLoaded && clerkUser) {
       const email = clerkUser.primaryEmailAddress?.emailAddress || '';
       const emailPrefix = email.split('@')[0];

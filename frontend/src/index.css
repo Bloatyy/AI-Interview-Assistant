@@ -6,9 +6,9 @@
   --surface-hover: #111111;
   --primary: #ffffff;
   --primary-muted: #888888;
-  --accent: #ffb800; /* Richer Gold */
-  --accent-secondary: #ff7a00; /* Amber */
-  --border: rgba(255, 255, 255, 0.03);
+  --accent: #ffb800;
+  --accent-secondary: #ff7a00;
+  --border: rgba(255, 255, 255, 0.05);
   --glass: rgba(255, 255, 255, 0.01);
   --neon-glow: 0 0 20px rgba(255, 184, 0, 0.15);
   --transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
@@ -36,6 +36,22 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   position: relative;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 184, 0, 0.15),
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* Global Background Enhancements */
@@ -72,7 +88,7 @@ body::after {
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   letter-spacing: -0.04em;
-  color: white;
+  color: var(--primary);
   font-weight: 700;
 }
 
