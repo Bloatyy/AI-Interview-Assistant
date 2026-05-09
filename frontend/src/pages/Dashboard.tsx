@@ -46,7 +46,7 @@ const resources = [
 ];
 
 
-export default function Dashboard() {
+export default function Dashboard({ user: propUser }: { user: any }) {
   const [atsScore, setAtsScore] = useState<number | null>(null);
   const [atsImprovements, setAtsImprovements] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -56,8 +56,7 @@ export default function Dashboard() {
   useEffect(() => {
     window.scrollTo(0, 0);
     const fetchStats = async () => {
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
+      const user = propUser || JSON.parse(localStorage.getItem("user") || "null");
       if (!user?.id) return;
       try {
         const res = await fetch(`http://localhost:5001/api/reports/${user.id}`);
@@ -86,7 +85,7 @@ export default function Dashboard() {
       }
     };
     fetchStats();
-  }, []);
+  }, [propUser?.id]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();

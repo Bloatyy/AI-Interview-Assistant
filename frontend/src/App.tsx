@@ -230,7 +230,7 @@ function App() {
           <Route path="/configure" element={<Configure />} />
           <Route path="/interview" element={<Interview />} />
           <Route path="/report" element={<Report />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard user={user} />} />
           <Route path="/resource/:id" element={<ResourceView />} />
           <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
           <Route path="/about" element={<About />} />
