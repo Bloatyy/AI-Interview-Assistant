@@ -42,7 +42,7 @@ const About = () => {
             </div>
             <div style={{ padding: '1.5rem', borderLeft: '3px solid #6366f1' }}>
               <h4 style={{ color: 'white' }}>Kunal</h4>
-              <p style={{ fontSize: '0.9rem' }}>Full Stack Web Development</p>
+              <p style={{ fontSize: '0.9rem' }}>Frontend & UX Design</p>
             </div>
           </div>
         </div>
