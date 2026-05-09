@@ -7,6 +7,10 @@ import Configure from './pages/Configure'
 import Dashboard from './pages/Dashboard'
 import ResourceView from './pages/ResourceView'
 import AuthModal from './components/AuthModal'
+import About from './pages/About'
+import Careers from './pages/Careers'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 import { useClerk, useUser, AuthenticateWithRedirectCallback } from '@clerk/clerk-react'
 
@@ -229,6 +233,10 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/resource/:id" element={<ResourceView />} />
           <Route path="/sso-callback" element={<AuthenticateWithRedirectCallback />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
 
@@ -255,9 +263,9 @@ function App() {
             <div className="footer-col">
               <h4 className="footer-title">Platform</h4>
               <div className="footer-links">
-                <Link to="/" className="footer-link">Mock Interviews</Link>
-                <Link to="/" className="footer-link">AI Feedback</Link>
-                <Link to="/" className="footer-link">Reports</Link>
+                <Link to="/configure" className="footer-link">Mock Interviews</Link>
+                <Link to="/dashboard" className="footer-link">AI Feedback</Link>
+                <Link to="/dashboard" className="footer-link">Reports</Link>
                 <Link to="/" className="footer-link">Pricing</Link>
               </div>
             </div>
@@ -265,10 +273,10 @@ function App() {
             <div className="footer-col">
               <h4 className="footer-title">Company</h4>
               <div className="footer-links">
-                <Link to="/" className="footer-link">About Us</Link>
-                <Link to="/" className="footer-link">Careers</Link>
-                <Link to="/" className="footer-link">Privacy Policy</Link>
-                <Link to="/" className="footer-link">Terms</Link>
+                <Link to="/about" className="footer-link">About Us</Link>
+                <Link to="/careers" className="footer-link">Careers</Link>
+                <Link to="/privacy" className="footer-link">Privacy Policy</Link>
+                <Link to="/terms" className="footer-link">Terms</Link>
               </div>
             </div>
 
