@@ -51,14 +51,7 @@ function App() {
   const [searchParams] = useSearchParams();
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+
 
   useEffect(() => {
     if (isClerkLoaded && clerkUser) {
@@ -318,7 +311,7 @@ function App() {
         </div>
       </footer>
       )}
-      <div className="cursor-spotlight"></div>
+
     </>
   )
 }
