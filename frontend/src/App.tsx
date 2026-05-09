@@ -318,6 +318,7 @@ function App() {
         </div>
       </footer>
       )}
+      <div className="cursor-spotlight"></div>
     </>
   )
 }
