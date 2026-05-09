@@ -57,6 +57,8 @@ export default function Interview() {
   const [preSessionCountdown, setPreSessionCountdown] = useState<number | null>(null);
   const [professionalismData, setProfessionalismData] = useState<any>(null);
 
+  const hasNotifiedAttire = useRef(false);
+
   // Analyze looks at the start of the interview
   useEffect(() => {
     if (isInterviewStarted && videoRef.current) {
@@ -94,8 +96,9 @@ export default function Interview() {
                   looks_grade: minGrade
                 });
 
-                if (data.attire === "informal") {
+                if (data.attire === "informal" && !hasNotifiedAttire.current) {
                   addNotification("Formal attire is recommended for this interview.");
+                  hasNotifiedAttire.current = true;
                 }
               }
             } catch (err) {
