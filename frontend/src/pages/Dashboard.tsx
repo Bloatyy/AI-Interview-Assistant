@@ -290,7 +290,7 @@ export default function Dashboard({ user: propUser }: { user: any }) {
           background-size: 40px 40px;
           pointer-events: none;
           z-index: -1;
-          opacity: 0.05;
+          opacity: 0.01;
         }
 
         .dashboard-header {
