@@ -270,7 +270,10 @@ export default function Dashboard({ user: propUser }: { user: any }) {
           left: 0;
           right: 0;
           bottom: 0;
-          opacity: 0.3;
+          background-image: url('/src/assets/neural_bg.png');
+          background-size: cover;
+          background-position: center;
+          opacity: 0.6;
           z-index: -2;
           pointer-events: none;
         }
