@@ -91,6 +91,13 @@ function App() {
     }
   };
 
+  const handleProtectedLink = (e: React.MouseEvent, path: string) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      setIsAuthModalOpen(true);
+    }
+  };
+
   const showNavbar = isIndexPage || location.pathname === '/dashboard';
 
   return (
@@ -273,9 +280,9 @@ function App() {
             <div className="footer-col">
               <h4 className="footer-title">Platform</h4>
               <div className="footer-links">
-                <Link to="/configure" className="footer-link">Mock Interviews</Link>
-                <Link to="/dashboard" className="footer-link">AI Feedback</Link>
-                <Link to="/dashboard" className="footer-link">Reports</Link>
+                <Link to="/configure" onClick={(e) => handleProtectedLink(e, "/configure")} className="footer-link">Mock Interviews</Link>
+                <Link to="/dashboard" onClick={(e) => handleProtectedLink(e, "/dashboard")} className="footer-link">AI Feedback</Link>
+                <Link to="/dashboard" onClick={(e) => handleProtectedLink(e, "/dashboard")} className="footer-link">Reports</Link>
                 <Link to="/" className="footer-link">Pricing</Link>
               </div>
             </div>
