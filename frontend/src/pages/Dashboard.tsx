@@ -60,7 +60,7 @@ export default function Dashboard() {
       const user = userStr ? JSON.parse(userStr) : null;
       if (!user?.id) return;
       try {
-        const res = await fetch(`http://localhost:5001/api/reports/user/${user.id}`);
+        const res = await fetch(`http://localhost:5001/api/reports/${user.id}`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {

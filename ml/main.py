@@ -28,7 +28,10 @@ async def process_answer(
     question_text: str = Form(...),
     posture: str = Form("Unknown"),
     eye_gaze: str = Form("Unknown"),
-    face_detected: str = Form("Unknown")
+    face_detected: str = Form("Unknown"),
+    attire: str = Form("Unknown"),
+    grooming: str = Form("Unknown"),
+    looks_grade: float = Form(0.0)
 ):
     """
     Unified endpoint for transcription and evaluation.
@@ -45,7 +48,10 @@ async def process_answer(
         body_language_data = {
             "posture": posture,
             "eye_gaze": eye_gaze,
-            "face_detected": face_detected
+            "face_detected": face_detected,
+            "attire": attire,
+            "grooming": grooming,
+            "looks_grade": looks_grade
         }
 
         # 1. Transcribe (Using high-speed Groq Whisper API)

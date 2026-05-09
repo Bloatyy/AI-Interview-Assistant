@@ -34,13 +34,15 @@ router.post('/', async (req, res) => {
     avgCommunication: req.body.avgCommunication,
     avgConfidence: req.body.avgConfidence,
     totalFillers: req.body.totalFillers,
-    results: req.body.results
+    results: req.body.results,
+    thoughtProcesses: req.body.thoughtProcesses
   });
 
   try {
     const newReport = await report.save();
     res.status(201).json(newReport);
   } catch (err) {
+    console.error("REPORT SAVE ERROR:", err.message);
     res.status(400).json({ message: err.message });
   }
 });

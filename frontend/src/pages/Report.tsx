@@ -390,13 +390,28 @@ export default function Report() {
       </div>
 
       {/* === SCORE FORMULA EXPLANATION === */}
-      <div className="glass-card" style={{ padding: '1.5rem 2rem', marginBottom: '4rem', borderLeft: '3px solid var(--accent)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Score Formula</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-            Overall = Technical × 0.4 + Confidence × 0.3 + Professionalism × 0.3
-          </span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '4rem' }}>
+        <div className="glass-card" style={{ padding: '1.5rem 2rem', borderLeft: '3px solid var(--accent)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Score Formula</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+              Overall = Technical × 0.4 + Confidence × 0.3 + Professionalism × 0.3
+            </span>
+          </div>
         </div>
+
+        {/* AUDIT NOTE: CLOTHING & GROOMING */}
+        {(integrityScore <= 75 || results.some((r: any) => r.evaluation?.weaknesses?.some((w: string) => w.includes("Clothing and grooming could be better")))) && (
+          <div className="glass-card" style={{ padding: '1.5rem 2rem', borderLeft: '3px solid #ef4444', background: 'rgba(239, 68, 68, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ background: '#ef4444', color: 'white', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 900 }}>!</div>
+              <div>
+                <div style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Professional Audit Note</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>Clothing and grooming could be better</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* === DETAILED PER-QUESTION BREAKDOWN === */}

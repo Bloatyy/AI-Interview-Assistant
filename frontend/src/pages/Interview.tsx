@@ -60,14 +60,15 @@ export default function Interview() {
   // Analyze looks at the start of the interview
   useEffect(() => {
     if (isInterviewStarted && videoRef.current) {
-      const videoElement = videoRef.current;
+      let lookSamples: number[] = [];
       const analyzeProfessionalism = async () => {
+        if (!videoRef.current) return;
         try {
           const canvas = document.createElement("canvas");
-          canvas.width = videoElement.videoWidth || 640;
-          canvas.height = videoElement.videoHeight || 480;
+          canvas.width = videoRef.current.videoWidth || 640;
+          canvas.height = videoRef.current.videoHeight || 480;
           const ctx = canvas.getContext("2d");
-          ctx?.drawImage(videoElement, 0, 0);
+          ctx?.drawImage(videoRef.current, 0, 0);
           
           canvas.toBlob(async (blob) => {
             if (!blob) return;
@@ -82,12 +83,23 @@ export default function Interview() {
               
               if (res.ok) {
                 const data = await res.json();
-                console.log("Neural Look Analysis:", data);
-                setProfessionalismData(data);
-                setNotifications(prev => [...prev.slice(-2), `Appearance Audited: ${data.attire} | ${data.grooming}`]);
+                console.log("Neural Look Analysis Sample:", data);
+                
+                lookSamples.push(data.looks_grade);
+                // Keep the lowest (strictest) score found so far
+                const minGrade = Math.min(...lookSamples);
+                
+                setProfessionalismData({
+                  ...data,
+                  looks_grade: minGrade
+                });
+
+                if (data.attire === "informal") {
+                  addNotification("Formal attire is recommended for this interview.");
+                }
               }
             } catch (err) {
-              console.warn("ML Look analysis unreachable, using baseline metrics.");
+              console.warn("ML Look analysis unreachable.");
             }
           }, "image/jpeg");
         } catch (err) {
@@ -95,8 +107,14 @@ export default function Interview() {
         }
       };
       
-      // Audit appearance after 3 seconds of live simulation
-      setTimeout(analyzeProfessionalism, 3000);
+      // Run analysis every 5 seconds for the first 25 seconds
+      const lookInterval = setInterval(analyzeProfessionalism, 5000);
+      setTimeout(() => clearInterval(lookInterval), 26000);
+      
+      // Also run one immediate check
+      analyzeProfessionalism();
+
+      return () => clearInterval(lookInterval);
     }
   }, [isInterviewStarted]);
 
@@ -231,11 +249,13 @@ export default function Interview() {
             setPostureStatus(data.posture_status);
             setEyeGazeStatus(data.eye_gaze);
             
+            // Notifications and scores
+            if (data.alert) {
+              addNotification(data.alert);
+            }
+
             if (isInterviewStarted) {
               setPostureScores(prev => [...prev, data.overall_score]);
-              if (data.alert) {
-                addNotification(data.alert);
-              }
             }
           } catch (err) {
             console.error("Diagnostic error:", err);
@@ -410,6 +430,11 @@ export default function Interview() {
         };
         allResultsRef.current = [...allResultsRef.current, fallbackResult];
         setAllResults([...allResultsRef.current]);
+
+        const existing = JSON.parse(localStorage.getItem("interview_results") || "[]");
+        existing.push(fallbackResult);
+        localStorage.setItem("interview_results", JSON.stringify(existing));
+        
         return fallbackResult;
       }
     })();
@@ -501,9 +526,12 @@ export default function Interview() {
         ? Math.round(results.reduce((acc: any, r: any) => acc + (r.evaluation.confidence || 0), 0) / results.length)
         : 0;
       const totalFillers = results.reduce((acc: any, r: any) => acc + (r.evaluation.filler_count || 0), 0);
+      // Neural Look Analysis Penalty (if detected during session)
+      const lookGrade = professionalismData?.looks_grade ?? 100;
+
       const avgIntegrity = results.length > 0
-        ? Math.round(results.reduce((acc: any, r: any) => acc + (r.evaluation.integrity_score || postureAvg), 0) / results.length)
-        : postureAvg;
+        ? Math.round(results.reduce((acc: any, r: any) => acc + (Math.min(r.evaluation.integrity_score || 100, lookGrade)), 0) / results.length)
+        : Math.min(postureAvg, lookGrade);
       
       // Overall = Technical 40% + Confidence 30% + Integrity 30%
       const overallScore = protocol === 'technical' 
@@ -897,6 +925,28 @@ export default function Interview() {
               <div className="prep-view mini">
                 <h2 className="section-title">Ready?</h2>
                 <p style={{ fontSize: '0.8rem', marginBottom: '1.5rem', opacity: 0.7 }}>Calibrate your position below.</p>
+                
+                <div className="diagnostic-prep-grid" style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: '0.75rem', 
+                  marginBottom: '1.5rem',
+                  width: '100%'
+                }}>
+                  <div className="diag-mini-card" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Face Detection</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: faceDetected === "Active" ? "#10b981" : "#ef4444" }}>{faceDetected}</div>
+                  </div>
+                  <div className="diag-mini-card" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Posture</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: postureStatus === "Good" ? "#10b981" : "#fbbf24" }}>{postureStatus}</div>
+                  </div>
+                  <div className="diag-mini-card" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)', gridColumn: 'span 2' }}>
+                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Eye Gaze Intelligence</div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: eyeGazeStatus === "Centered" ? "#10b981" : "#fbbf24" }}>{eyeGazeStatus}</div>
+                  </div>
+                </div>
+
                 <button onClick={startInterview} className="btn-primary start-btn">Start Session</button>
               </div>
             ) : (

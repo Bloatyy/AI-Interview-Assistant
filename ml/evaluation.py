@@ -92,14 +92,14 @@ def evaluate_answer(transcript, question_text, body_language_data=None):
        - Use of correct terminology and concepts
 
     3. **INTEGRITY & PROFESSIONALISM (0-100)**:
-       - Based on body language AND appearance metrics provided above.
-       - Good posture + Centered gaze + Formal attire = high score.
-       - Casual attire or poor grooming should result in a lower professionalism score (penalty of 10-20 points).
-       - If posture is "Good" and attire is "Formal": 90-100.
-       - If attire is "Casual" or "Informal": Max 75 for this axis, and MUST add "Wear formal attire for your next interview to project a more professional image" to the weaknesses list.
+        - Based on body language AND appearance metrics provided above.
+        - Good posture + Centered gaze + Formal attire = high score.
+        - Casual attire or poor grooming should result in a lower professionalism score (penalty of 10-20 points).
+        - If posture is "Good" and attire is "Formal": 90-100.
+        - If attire is 'informal' or grooming is 'Beard', you MUST include the EXACT weakness: Clothing and grooming could be better to the weaknesses list.
 
     4. **OVERALL SCORE (0-100)**:
-       - Weighted: Technical 40% + Confidence 30% + Professionalism 30%
+        - Weighted: Technical 40% + Confidence 30% + Professionalism 30%
 
     Return ONLY valid JSON with these exact keys:
     {{
@@ -151,6 +151,14 @@ def evaluate_answer(transcript, question_text, body_language_data=None):
         evaluation.setdefault("confidence_analysis", "")
         evaluation.setdefault("technical_analysis", "")
         evaluation.setdefault("integrity_analysis", "")
+
+        # Post-processing to enforce the specific feedback requested by user
+        if body_language_data:
+            attire = body_language_data.get('attire', '').lower()
+            grooming = body_language_data.get('grooming', '').lower()
+            if attire == "informal" or grooming == "beard":
+                if "Clothing and grooming could be better" not in evaluation["weaknesses"]:
+                    evaluation["weaknesses"].append("Clothing and grooming could be better")
         
         print(f"  -> Score: {evaluation['score']}, Confidence: {evaluation['confidence']}, Tech: {evaluation['technical_score']}, Integrity: {evaluation['integrity_score']}, Fillers: {evaluation['filler_count']}")
         

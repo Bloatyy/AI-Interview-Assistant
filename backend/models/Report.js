@@ -17,12 +17,21 @@ const ReportSchema = new mongoose.Schema({
       question: String,
       evaluation: {
         score: Number,
+        technical_score: Number,
+        confidence: Number,
+        integrity_score: Number,
+        filler_count: Number,
+        filler_breakdown: Object,
         feedback: String,
         strengths: [String],
         weaknesses: [String],
         transcript: String,
-        confidence: Number,
-        filler_count: Number
+        confidence_analysis: String,
+        technical_analysis: String,
+        integrity_analysis: String,
+        attire: String,
+        grooming: String,
+        looks_grade: Number
       }
     }
   ],

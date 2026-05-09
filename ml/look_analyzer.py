@@ -7,8 +7,9 @@ import cv2
 import numpy as np
 
 # Model paths
-ATTIRE_MODEL_PATH = "ml/models/attire.pth"
-GROOMING_MODEL_PATH = "ml/models/grooming.pth"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ATTIRE_MODEL_PATH = os.path.join(BASE_DIR, "models", "attire.pth")
+GROOMING_MODEL_PATH = os.path.join(BASE_DIR, "models", "grooming.pth")
 
 # Classes (Must match ImageFolder alphabetical order: Beard/No Beard, formal/informal)
 ATTIRE_CLASSES = ["formal", "informal"]
@@ -60,19 +61,38 @@ class LookAnalyzer:
         results = {}
 
         with torch.no_grad():
-            # Attire analysis
+            # Attire analysis with strict confidence threshold
             attire_out = self.attire_model(image)
             attire_probs = torch.softmax(attire_out, dim=1)
             attire_score, attire_idx = torch.max(attire_probs, 1)
-            results["attire"] = ATTIRE_CLASSES[attire_idx.item()]
-            results["attire_confidence"] = attire_score.item()
+            
+            raw_attire = ATTIRE_CLASSES[attire_idx.item()]
+            conf = attire_score.item()
+            
+            # STRICT RULE: Must be > 80% confident to be called "formal"
+            if raw_attire == "formal" and conf < 0.8:
+                results["attire"] = "informal"
+            else:
+                results["attire"] = raw_attire
+                
+            results["attire_confidence"] = conf
+            print(f"DEBUG: Attire Check -> Raw: {raw_attire}, Conf: {conf:.2f}, Final: {results['attire']}")
 
             # Grooming analysis
             grooming_out = self.grooming_model(image)
             grooming_probs = torch.softmax(grooming_out, dim=1)
             grooming_score, grooming_idx = torch.max(grooming_probs, 1)
-            results["grooming"] = GROOMING_CLASSES[grooming_idx.item()]
-            results["grooming_confidence"] = grooming_score.item()
+            
+            raw_grooming = GROOMING_CLASSES[grooming_idx.item()]
+            g_conf = grooming_score.item()
+            
+            if raw_grooming == "No Beard" and g_conf < 0.8:
+                results["grooming"] = "Beard" # Assume facial hair if uncertain
+            else:
+                results["grooming"] = raw_grooming
+                
+            results["grooming_confidence"] = g_conf
+            print(f"DEBUG: Grooming Check -> Raw: {raw_grooming}, Conf: {g_conf:.2f}, Final: {results['grooming']}")
 
         # Grade the looks (Professionalism Score)
         # formal = +60, informal = +20
