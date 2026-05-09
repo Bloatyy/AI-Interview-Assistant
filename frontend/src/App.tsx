@@ -55,10 +55,12 @@ function App() {
     if (isClerkLoaded && clerkUser) {
       const email = clerkUser.primaryEmailAddress?.emailAddress || '';
       const emailPrefix = email.split('@')[0];
+      const avatarSeed = Math.floor(Math.random() * 1000000);
       const userData = {
         id: clerkUser.id,
         name: emailPrefix,
-        email: email
+        email: email,
+        avatar: `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${avatarSeed}&backgroundColor=b6e3f4,c0aede,d1d4f9`
       };
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', 'clerk-session');
@@ -123,8 +125,10 @@ function App() {
           width: 28px;
           height: 28px;
           border-radius: 50%;
-          background: linear-gradient(135deg, var(--accent), #ff8a00);
-          box-shadow: 0 0 10px rgba(255,184,0,0.2);
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 0 15px rgba(255,184,0,0.1);
+          object-fit: cover;
         }
 
         .profile-text {
@@ -209,7 +213,11 @@ function App() {
               <div className="nav-group right" style={{ gap: '2rem' }}>
                 <div className="profile-group">
                   <div className="profile-trigger">
-                    <div className="avatar-placeholder"></div>
+                    {user?.avatar ? (
+                      <img src={user.avatar} alt="Avatar" className="avatar-placeholder" />
+                    ) : (
+                      <div className="avatar-placeholder" style={{ background: 'linear-gradient(135deg, var(--accent), #ff8a00)' }}></div>
+                    )}
                     <span className="profile-text">{user?.name || 'Professional'}</span>
                   </div>
                   
