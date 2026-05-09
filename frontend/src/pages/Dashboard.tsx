@@ -273,7 +273,8 @@ export default function Dashboard({ user: propUser }: { user: any }) {
           background-image: url('/src/assets/neural_bg.png');
           background-size: cover;
           background-position: center;
-          opacity: 0.6;
+          opacity: 0.25;
+          filter: brightness(0.8) saturate(0.6);
           z-index: -2;
           pointer-events: none;
         }
